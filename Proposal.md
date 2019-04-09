@@ -1,6 +1,4 @@
-<center>
 #CS 184: Final Project Proposal
-</center>
 ---
 ## Title, Summary and Team Members
 
