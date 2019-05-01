@@ -61,7 +61,20 @@
               <div class="col-md-10">
                 <h2 class="mb-3">Current Accomplishments and Results</h2>
                 <p>
-                  Now, we have down .......
+                  In the first week, we focused on learning <code>OpenGL</code> and finishing the basic cloth simulation. When we
+                  did the basic cloth simulation following the instructions in Project 4, we also learned some basic knowledge
+                  about shader, which is pretty important and useful for the further project.
+                </p>
+                <p>
+                  In the second week, we divided the project into two parts. Xinhao was responsible for adding several new features
+                  into this simulation system, Shenao and Jieming were responsible for trying to use shaders to calculate the
+                  simulation steps, which were calculated in CPU before.
+                </p>
+                <p>
+                  Until now, we have already created shaders for simulation steps based on transform feedback buffer. With the help
+                  of GPU's great parallel processing power, we are able to simulate the motion of numbers of vertices at the same time, and
+                  achieve a faster and more accurate simulation system. Besides, we have also added some new features, including a moving
+                  sphere, a static cube and wind force, and handled a part of collision detection.
                 </p>
                 <p><a href="gallery.html">To view the result videos</a></p>
 
@@ -72,36 +85,19 @@
                   <div class="media block-icon-1 d-block text-center">
                     <div class="icon mb-3"><span class="ion-ios-loop"></span></div>
                     <div class="media-body">
-                      <h3 class="h5 mb-4">Problem title</h3>
-                      <p>Problem description.....</p>
+                      <h3 class="h5 mb-4">Tradeoff between gap and model penetration
+                      </h3>
+                      <p>As so far, the cloth can interact with the moving ball well in some extent. In order to prevent the ball from going through the cloth model, we decrease the radius when rendering, however, there will be a little gap between the surface of ball and cloth, which looks very strange. If we keep the radius as project4, the ball might go through the cloth. How can we deal with this?
+                      </p>
                     </div>
                   </div> <!-- .block-icon-1 -->
                 </div>
-                <div class="col-md-5 col-lg-5 mb-4 mt-4" data-aos="fade-up" data-aos-delay="100">
-                  <div class="media block-icon-1 d-block text-center">
-                    <div class="icon mb-3"><span class="ion-ios-infinite-outline"></span></div>
-                    <div class="media-body">
-                      <h3 class="h5 mb-4">Infinite Posibilities</h3>
-                      <p>A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
-                    </div>
-                  </div> <!-- .block-icon-1 -->
-                </div>
-                <div class="col-md-5 col-lg-5 mb-4" data-aos="fade-up" data-aos-delay="200">
-                  <div class="media block-icon-1 d-block text-center">
-                    <div class="icon mb-3"><span class="ion-ios-locked-outline"></span></div>
-                    <div class="media-body">
-                      <h3 class="h5 mb-4">Good Security</h3>
-                      <p>A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
-                    </div>
-                  </div> <!-- .block-icon-1 -->
-                </div>
-
-                <div class="col-md-5 col-lg-5 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="col-md-5 col-lg-5 mb-4 mt-4" data-aos="fade-up">
                   <div class="media block-icon-1 d-block text-center">
                     <div class="icon mb-3"><span class="ion-ios-nutrition-outline"></span></div>
                     <div class="media-body">
-                      <h3 class="h5 mb-4">Orange for Carrots</h3>
-                      <p>A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
+                      <h3 class="h5 mb-4">Bouncing on the cube</h3>
+                      <p>When I implement the collision between the cube and cloth, it ends with the cloth still slightly bouncing on the cube, which is worse than the situation in self-collisions in project4. Is here any better algorithm for cloth colliding with a plane?</p>
                     </div>
                   </div> <!-- .block-icon-1 -->
                 </div>
@@ -112,61 +108,7 @@
                     <li>
                     <div class="timeline-panel">
                       <div class="timeline-heading">
-                        <h4 class="timeline-title"><code>OpenGL</code>, Basic Environment Renderings</h4>
-                        <p>
-                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 1.0 week
-                          </small>
-                        </p>
-                      </div>
-                      <div class="timeline-body">
-                        <p>
-                          Expand on the previous knowledge of <code>OpenGL</code>; Learn how to use
-                          <code>OpenGL</code> in <code>C++</code> and create an interactive application; Prepare
-                          basic
-                          environment settings for future simulations.
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="timeline-inverted">
-                    <div class="timeline-panel">
-                      <div class="timeline-heading">
-                        <h4 class="timeline-title">Basic Cloth Simulations</h4>
-                        <p>
-                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 1.0 week
-                          </small>
-                        </p>
-                      </div>
-                      <div class="timeline-body">
-                        <p>
-                          Implement basic Cloth Simulation using <code>OpenGL</code> and <code>C++</code> using
-                          Mass-spring model; Verlet Integration; Explicit Euler Integration.
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div class="timeline-panel">
-                      <div class="timeline-heading">
-                        <h4 class="timeline-title">Complex Cloth Simulations (Interactivity with <code>WebGL</code>)
-                        </h4>
-                        <p>
-                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 1.5 week
-                          </small>
-                        </p>
-                      </div>
-                      <div class="timeline-body">
-                        <p>
-                          Add extra components to the environment renderings such as dummy; force; elasticity;
-                          texture; lighting; (Possibly) implement <code>WebGL</code>-based simulation
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="timeline-inverted">
-                    <div class="timeline-panel">
-                      <div class="timeline-heading">
-                        <h4 class="timeline-title">Presentation and Demos</h4>
+                        <h4 class="timeline-title">Improve collision detection methods</h4>
                         <p>
                           <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 0.5 week
                           </small>
@@ -174,9 +116,57 @@
                       </div>
                       <div class="timeline-body">
                         <p>
-                          Prepare the final presentation; finish high-quality and precise renders of cloth
-                          simulations
-                          with dummy, force, elasticity, texture, and lighting.
+                          Seek for better methods to deal the collision detection with cube and self-collision.
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="timeline-inverted">
+                    <div class="timeline-panel">
+                      <div class="timeline-heading">
+                        <h4 class="timeline-title">Add more complex but interesting features</h4>
+                        <p>
+                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 0.5 week
+                          </small>
+                        </p>
+                      </div>
+                      <div class="timeline-body">
+                        <p>
+                          Try to add some more interesting features into this simulation system, like cone, pyramid, and
+                          torus shown in Project 2. A torus can be really difficult, but we will have a try.
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="timeline-panel">
+                      <div class="timeline-heading">
+                        <h4 class="timeline-title">Presentation Preparation
+                        </h4>
+                        <p>
+                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 0.5 week
+                          </small>
+                        </p>
+                      </div>
+                      <div class="timeline-body">
+                        <p>
+                          Prepare for the final presentation, make presentation slides and demos.
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="timeline-inverted">
+                    <div class="timeline-panel">
+                      <div class="timeline-heading">
+                        <h4 class="timeline-title">Final Deliverables</h4>
+                        <p>
+                          <small class="text-muted"><i class="glyphicon glyphicon-time"></i> 0.5 week
+                          </small>
+                        </p>
+                      </div>
+                      <div class="timeline-body">
+                        <p>
+                          Record the final video to show what we have done, and write the final report.
                         </p>
                       </div>
                     </div>
@@ -185,13 +175,24 @@
 
                 <h2 class="mb-3 mt-5">Milestone Video</h2>
 
-              </div>
+                <div class="panel show">
+                  <div class="videoWrapper">
+                    <iframe src="https://www.youtube.com/embed/mnBywTwjYXM" frameborder="0"
+                            allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-              <div class="col-lg-8 mb-4 mt-3">
-                <a href="images/test.mp4" data-fancybox="gallery" data-caption="balabalabalabala">
-                  <img src="images/test.mp4" class="img-fluid">
-                </a>
-                <p class="mt-2 text-center"></p>
+                  </div>
+                </div>
+
+                <h2 class="mb-3 mt-5">Milestone Slides</h2>
+
+                <div class="panel show">
+                  <div class="videoWrapper">
+                    <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTUL_ujWVsqLUglYAsNY4DIHdg4rf5yCnTBBEDP5wHBDI6sWtEY-j4qWkaLvh5tG41Gyv6HA6P_JnrE/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
+
+                  </div>
+                </div>
+
               </div>
 
             </div>
