@@ -27,6 +27,8 @@ struct Spring {
 
   PointMass *pm_a;
   PointMass *pm_b;
+    int index_a;
+    int index_b;
 }; // struct Spring
 }
 #endif /* SPRING_H */

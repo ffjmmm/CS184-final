@@ -4,8 +4,10 @@
 #include "CGL/CGL.h"
 #include "CGL/misc.h"
 #include "CGL/vector3D.h"
+#include <vector>
 
 using namespace CGL;
+using namespace std;
 
 // Forward declarations
 class Halfedge;
@@ -28,7 +30,12 @@ struct PointMass {
   Vector3D position;
   Vector3D last_position;
   Vector3D forces;
-
+    
+    vector<int> index_spring_STRUCTURAL;
+    vector<int> index_spring_SHEARING;
+    vector<int> index_spring_BENDING;
+    int index_feedback;
+    
   // mesh reference
   Halfedge *halfedge;
 };

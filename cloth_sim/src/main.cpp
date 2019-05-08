@@ -387,6 +387,36 @@ bool find_project_root(const std::vector<std::string>& search_paths, std::string
 
 
 
+const GLchar* vertexShader = R"glsl(
+#version 330
+
+in vec3 position;
+uniform samplerBuffer information;
+out vec3 outPosition;
+
+void main()
+{
+    // outPosition = position - 0.001 * vec3(0, 0, 1);
+    outPosition = position - 0.001 * texelFetch(information, 0).rag;
+    gl_Position = vec4(outPosition, 1.0);
+}
+)glsl";
+
+// Fragment shader
+const GLchar* fragmentShader = R"glsl(
+#version 330
+
+out vec4 outColor;
+
+void main()
+{
+    outColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+)glsl";
+
+
+
+
 
 int main(int argc, char **argv) {
   // Attempt to find project root
@@ -474,7 +504,7 @@ int main(int argc, char **argv) {
   // Initialize the Cloth object
   cloth.buildGrid();
   cloth.buildClothMesh();
-  cloth.initTransFormBuffer();
+  cloth.initTransFormBuffer(project_root);
 
   // Initialize the ClothSimulator object
   app = new ClothSimulator(project_root, screen);
@@ -495,13 +525,14 @@ int main(int argc, char **argv) {
     float points[] = {
         0.0f,  0.5f,  0.0f,
         0.5f, -0.5f,  0.0f,
-        -0.5f, -0.5f,  0.0f
+        -0.5f, -0.5f,  0.0f,
+        0.0F, 0.0F, 0.0f
     };
     
     GLuint vbo = 0;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), points, GL_STATIC_DRAW);
     
     
     GLuint vao = 0;
@@ -513,10 +544,10 @@ int main(int argc, char **argv) {
     
     
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertexShaderSrc, NULL);
+    glShaderSource(vs, 1, &vertexShader, NULL);
     glCompileShader(vs);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragmentShaderSrc, NULL);
+    glShaderSource(fs, 1, &fragmentShader, NULL);
     glCompileShader(fs);
     GLuint shader_programme = glCreateProgram();
     glAttachShader(shader_programme, fs);
@@ -534,36 +565,74 @@ int main(int argc, char **argv) {
     GLuint tbo;
     glGenBuffers(1, &tbo);
     glBindBuffer(GL_ARRAY_BUFFER, tbo);
-    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
 
     glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
+    
+    GLfloat information[3] = {1, 2, 3};
+    GLuint information_buffer;
+    glGenBuffers(1, &information_buffer);
+    glBindBuffer(GL_TEXTURE_BUFFER, information_buffer);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(information), information, GL_STREAM_DRAW);
+    glBindBuffer(GL_TEXTURE_BUFFER, 0);
+    
+    GLuint information_texture;
+    glGenTextures(1, &information_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_BUFFER, information_texture);
+    // glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, information_buffer);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, information_buffer);
+    
+    GLuint uniInformation;
+    uniInformation = glGetUniformLocation(shader_programme, "information");
+    
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     
-    GLfloat feedback[9];
+    GLfloat feedback[12];
+
+    GLuint indices[] = {0, 1, 0, 3};
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_READ);
     */
-    
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         
         glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        /*
-         glUseProgram(shader_programme);
-         glBindVertexArray(vao);
         
-        glBeginTransformFeedback(GL_TRIANGLES);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        /*
+        information[0] = information[0] + 1;
+        glBindBuffer(GL_TEXTURE_BUFFER, information_buffer);
+        glBufferSubData(GL_TEXTURE_BUFFER, 0, sizeof(information), information);
+        glBindTexture(GL_TEXTURE_BUFFER, information_texture);
+        glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, information_buffer);
+        
+        glUniform1i(uniInformation, 0);
+        
+        // glBindVertexArray(vao);
+        glUseProgram(shader_programme);
+        
+        glBeginTransformFeedback(GL_LINES);
+        // glDrawElements(GL_LINES, 4, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_LINES, 0, 4);
+        // glDrawArrays(GL_POINTS, 0, 3);
         glEndTransformFeedback();
 
         glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
-        for (int i = 0; i < 9; i ++) points[i] = feedback[i];
+        for (int i = 0; i < 12; i ++) {
+            printf("%f ", points[i]);
+            points[i] = feedback[i];
+        }
+        printf("\n");
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-        */
+    */
         app->drawContents();
 
     // Draw nanogui
-    //    screen->drawContents();
-    //    screen->drawWidgets();
+//        screen->drawContents();
+//        screen->drawWidgets();
         
         glfwSwapBuffers(window);
         

@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 #include "CGL/CGL.h"
 #include "CGL/misc.h"
@@ -48,14 +49,13 @@ struct Cloth {
   ~Cloth();
 
   void buildGrid();
-    void initTransFormBuffer();
+    void initTransFormBuffer(string project_root);
   void simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
-                vector<Vector3D> external_accelerations,
-                vector<CollisionObject *> *collision_objects,
-                Vector3D wind, Matrix4f model, Matrix4f viewProjection);
+                Vector3D gravity, vector<CollisionObject *> *collision_objects,
+                Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause);
 
   void reset();
-  void buildClothMesh();
+    void buildClothMesh();
 
   void build_spatial_map();
   void self_collide(PointMass &pm, double simulation_steps);
@@ -78,19 +78,47 @@ struct Cloth {
   // Spatial hashing
   unordered_map<float, vector<PointMass *> *> map;
     
+    string m_project_root;
+    
+    int len = 19;
     GLuint vertexShader;
     GLuint fragmentShader;
     GLuint program;
+    GLint uniGravity;
+    GLint uniKs;
+    GLint uniPoints;
+    GLfloat points[2500 * 3];
+    GLint points_pinned[2500];
+    GLint uniPinned;
+    GLint uniPoints_x;
+    GLint uniPoints_y;
+    GLint uniPoints_z;
+    GLint uniMass;
+    GLint uniDamping;
+    GLint uniDeltaT;
+    GLint uniPause;
     GLint uniTime;
     GLint uniModel;
     GLint uniViewProjection;
     GLuint vao;
     GLuint vbo;
+    GLuint ebo;
+    GLuint points_buffer;
+    GLuint pinned_buffer;
+    GLuint points_texture;
+    GLuint pinned_texture;
+    GLint springStructuralAttrib;
+    GLint springShearingAttrib;
+    GLint springBendingAttrib;
     GLint posAttrib;
     GLint pinAttrib;
+    GLint lastPosAttrib;
     GLuint tbo;
-    GLfloat dataPos[2500 * 4];
-    GLfloat feedback[2500 * 4];
+    GLfloat dataPos[2500 * 19];
+    GLfloat feedback[14502 * 6 * 2];
+    GLuint indices[14502 * 2];
+//    GLfloat dataPos[14502 * 2 * 7];
+//    GLfloat feedback[14502 * 2 * 6];
 };
 
 #endif /* CLOTH_H */

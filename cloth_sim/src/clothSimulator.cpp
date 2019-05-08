@@ -242,8 +242,7 @@ void ClothSimulator::drawContents() {
   glEnable(GL_DEPTH_TEST);
   // if (!is_paused) {
       
-    vector<Vector3D> external_accelerations = {gravity};
-      
+    
     //for (int i = 0; i < simulation_steps; i++) {
     //  cloth->simulate(frames_per_sec, simulation_steps, cp, external_accelerations, collision_objects, wind);
     // }
@@ -251,10 +250,10 @@ void ClothSimulator::drawContents() {
   // Bind the active shader
   /*
   const UserShader& active_shader = shaders[active_shader_idx];
+   */
+//  GLShader shader = active_shader.nanogui_shader;
+//  shader.bind();
 
-  GLShader shader = active_shader.nanogui_shader;
-  shader.bind();
-*/
   // Prepare the camera projection matrix
 
   Matrix4f model;
@@ -268,11 +267,11 @@ void ClothSimulator::drawContents() {
  //   shader.setUniform("u_model", model);
  //   shader.setUniform("u_view_projection", viewProjection);
     
-    cloth -> simulate(frames_per_sec, simulation_steps, cp, external_accelerations, collision_objects, wind, model, viewProjection);
+    cloth -> simulate(frames_per_sec, simulation_steps, cp, gravity, collision_objects, wind, model, viewProjection, is_paused);
   /*
   switch (active_shader.type_hint) {
       case WIREFRAME: {
-     //     shader.setUniform("u_information_texture", 6, false);
+          shader.setUniform("u_information_texture", 6, false);
           shader.setUniform("u_color", color, false);
           drawWireframe(shader);
           break;

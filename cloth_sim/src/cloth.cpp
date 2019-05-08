@@ -2,6 +2,8 @@
 #include <math.h>
 #include <random>
 #include <vector>
+#include <cstdio>
+#include <fstream>
 
 #include "cloth.h"
 #include "collision/plane.h"
@@ -41,112 +43,8 @@ Cloth::~Cloth() {
 }
 
 
-
-
-const GLchar* vertexShaderSrc = R"glsl(
-#version 150 core
-
-uniform mat4 u_model;
-uniform mat4 u_view_projection;
-
-in vec3 position;
-in float pinned;
-
-out vec4 outPosition;
-
-void main()
-{
-    // Points move towards their original position...
-    outPosition = vec4(position, 1.0) + vec4(0.0, -0.001, 0.0, 0.0);
-    // outPosition = u_model * outPosition
-    // outPosition = position;
-    /*
-     if (pinned == 0.0) {
-     outPosition = outPosition + vec3(0.0, -0.01, 0.0);
-     }
-     */
-    // gl_Position = outPosition;
-    gl_Position = u_view_projection * outPosition;
-}
-)glsl";
-
-// Fragment shader
-const GLchar* fragmentShaderSrc = R"glsl(
-#version 150 core
-
-out vec4 outColor;
-
-void main()
-{
-    outColor = vec4(1.0, 0.0, 0.0, 1.0);
-}
-)glsl";
-
-
-
-
-
-void Cloth::initTransFormBuffer() {
-    
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
-    glCompileShader(vertexShader);
-    
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSrc, nullptr);
-    glCompileShader(fragmentShader);
-    
-    program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    
-    const GLchar* feedbackVaryings[] = {"outPosition"};
-    glTransformFeedbackVaryings(program, 1, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
-    
-    glLinkProgram(program);
-    
-    uniModel = glGetUniformLocation(program, "u_model");
-    uniViewProjection = glGetUniformLocation(program, "u_view_projection");
-    
-    for (int i = 0; i < point_masses.size(); i ++) {
-        dataPos[4 * i] = point_masses[i].position.x;
-        dataPos[4 * i + 1] = point_masses[i].position.y;
-        dataPos[4 * i + 2] = point_masses[i].position.z;
-        dataPos[4 * i + 3] = (float)point_masses[i].pinned;
-    }
-    
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(dataPos), dataPos, GL_STREAM_DRAW);
-    
-    
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    
-    posAttrib = glGetAttribLocation(program, "position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), 0);
-
-    pinAttrib = glGetAttribLocation(program, "pinned");
-    glEnableVertexAttribArray(pinAttrib);
-    glVertexAttribPointer(pinAttrib, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
-    
-    glGenBuffers(1, &tbo);
-    glBindBuffer(GL_ARRAY_BUFFER, tbo);
-    glBufferData(GL_ARRAY_BUFFER, 2500 * 4 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
-    
-    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-}
-
-
-
-
 void Cloth::buildGrid() {
-  // TODO (Part 1): Build a grid of masses and springs.
+    // TODO (Part 1): Build a grid of masses and springs.
     double width_unit = width / num_width_points;
     double height_unit = height / num_height_points;
     
@@ -215,33 +113,303 @@ void Cloth::buildGrid() {
     
 }
 
-void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
-                     vector<Vector3D> external_accelerations,
-                     vector<CollisionObject *> *collision_objects, Vector3D wind,
-                     Matrix4f model, Matrix4f viewProjection) {
-  double mass = width * height * cp->density / num_width_points / num_height_points;
-  double delta_t = 1.0f / frames_per_sec / simulation_steps;
+void Cloth::initTransFormBuffer(string project_root) {
+    m_project_root = project_root;
     
+    freopen("indices", "r", stdin);
+    for (int i = 0; i < 14502 * 2; i ++) {
+        scanf("%d", &indices[i]);
+    }
+    printf("Indices Data Read completely!\n");
+    // printf("%d %d %d %d \n", indices[100], indices[101], indices[102], indices[103]);
+    
+    auto file_to_string = [](const std::string &filename) -> std::string {
+        if (filename.empty())
+            return "";
+        std::ifstream t(filename);
+        return std::string((std::istreambuf_iterator<char>(t)),
+                           std::istreambuf_iterator<char>());
+    };
+    
+    string vert_shader_str = file_to_string(m_project_root + "/my_shaders/Default.vert");
+    string frag_shader_str = file_to_string(m_project_root + "/my_shaders/Default.frag");
+    
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
+    const char *vert_shader_const = vert_shader_str.c_str();
+    glShaderSource(vertexShader, 1, &vert_shader_const, nullptr);
+    glCompileShader(vertexShader);
+    
+    GLint status;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
+    
+    if (status != GL_TRUE) {
+        char buffer[512];
+        std::cerr << "Error while compiling ";
+        std::cerr << "vertex shader";
+        std::cerr << vert_shader_str << std::endl << std::endl;
+        glGetShaderInfoLog(vertexShader, 512, nullptr, buffer);
+        std::cerr << "Error: " << std::endl << buffer << std::endl;
+        throw std::runtime_error("Shader compilation failed!");
+    }
+    
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // glShaderSource(fragmentShader, 1, &fragmentShaderSrc, nullptr);
+    const char *frag_shader_const = frag_shader_str.c_str();
+    glShaderSource(fragmentShader, 1, &frag_shader_const, nullptr);
+    glCompileShader(fragmentShader);
+    
+    program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    
+    const GLchar* feedbackVaryings[] = {"outPosition", "out_last_position"};
+    glTransformFeedbackVaryings(program, 2, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
+    
+    glLinkProgram(program);
+    uniModel = glGetUniformLocation(program, "u_model");
+    uniViewProjection = glGetUniformLocation(program, "u_view_projection");
+    uniPause = glGetUniformLocation(program, "pause");
+    uniGravity = glGetUniformLocation(program, "u_gravity");
+    uniDeltaT = glGetUniformLocation(program, "u_delta_t");
+    uniDamping = glGetUniformLocation(program, "u_damping");
+    uniMass = glGetUniformLocation(program, "u_mass");
+    uniPoints_x = glGetUniformLocation(program, "px");
+    uniPoints_y = glGetUniformLocation(program, "py");
+    uniPoints_z = glGetUniformLocation(program, "pz");
+    uniKs = glGetUniformLocation(program, "u_ks");
+    uniPoints = glGetUniformLocation(program, "u_points");
+    uniPinned = glGetUniformLocation(program, "u_pinned");
+    
+    for (int i = 0; i < springs.size(); i ++) {
+        for (int k = 0; k < point_masses.size(); k ++) {
+            if (springs[i].pm_a -> position == point_masses[k].position) {
+                springs[i].index_a = k;
+                if (springs[i].spring_type == BENDING) {
+                    point_masses[k].index_spring_BENDING.push_back(i);
+                }
+                if (springs[i].spring_type == STRUCTURAL) {
+                    point_masses[k].index_spring_STRUCTURAL.push_back(i);
+                }
+                if (springs[i].spring_type == SHEARING) {
+                    point_masses[k].index_spring_SHEARING.push_back(i);
+                }
+                point_masses[k].index_feedback = 2 * i;
+            }
+            if (springs[i].pm_b -> position == point_masses[k].position) {
+                springs[i].index_b = k;
+                if (springs[i].spring_type == BENDING) {
+                    point_masses[k].index_spring_BENDING.push_back(i);
+                }
+                if (springs[i].spring_type == STRUCTURAL) {
+                    point_masses[k].index_spring_STRUCTURAL.push_back(i);
+                }
+                if (springs[i].spring_type == SHEARING) {
+                    point_masses[k].index_spring_SHEARING.push_back(i);
+                }
+                point_masses[k].index_feedback = 2 * i + 1;
+            }
+        }
+    }
+    
+    // 每个点最多有12根弹簧与他相连
+    /*
+     for (int i = 0; i < springs.size(); i ++) {
+         printf("~~%u %lf\n", springs[i].spring_type, springs[i].rest_length);
+     }
+    */
+    
+    // 012: position 3: pinned 456: last_position
+    // STRUCTURAL No.: 789(10) rest_len = 0.02
+    // SHEARING No.:(11)(12)(13)(14) rest_len = 0.028284
+    // BENDING No." (15)(16)(17)(18) rest_len = 0.04
+    
+    for (int i = 0; i < point_masses.size(); i ++) {
+        points[3 * i] = point_masses[i].position.x;
+        points[3 * i + 1] = point_masses[i].position.y;
+        points[3 * i + 2] = point_masses[i].position.z;
+        points_pinned[i] = (int)point_masses[i].pinned;
+        dataPos[len * i] = point_masses[i].position.x;
+        dataPos[len * i + 1] = point_masses[i].position.y;
+        dataPos[len * i + 2] = point_masses[i].position.z;
+        dataPos[len * i + 3] = (int)point_masses[i].pinned;
+        dataPos[len * i + 4] = point_masses[i].last_position.x;
+        dataPos[len * i + 5] = point_masses[i].last_position.y;
+        dataPos[len * i + 6] = point_masses[i].last_position.z;
+        for (int k = 0; k < 12; k ++) dataPos[len * i + 7 + k] = -1;
+        for (int k = 0; k < point_masses[i].index_spring_STRUCTURAL.size(); k ++) {
+            int another_point_index;
+            if (springs[point_masses[i].index_spring_STRUCTURAL[k]].index_a == i) {
+                another_point_index = springs[point_masses[i].index_spring_STRUCTURAL[k]].index_b;
+            }
+            else {
+                another_point_index = springs[point_masses[i].index_spring_STRUCTURAL[k]].index_a;
+            }
+            dataPos[len * i + 7 + k] = another_point_index;
+        }
+        for (int k = 0; k < point_masses[i].index_spring_SHEARING.size(); k ++) {
+            int another_point_index;
+            if (springs[point_masses[i].index_spring_SHEARING[k]].index_a == i) {
+                another_point_index = springs[point_masses[i].index_spring_SHEARING[k]].index_b;
+            }
+            else {
+                another_point_index = springs[point_masses[i].index_spring_SHEARING[k]].index_a;
+            }
+            dataPos[len * i + 11 + k] = another_point_index;
+        }
+        for (int k = 0; k < point_masses[i].index_spring_BENDING.size(); k ++) {
+            int another_point_index;
+            if (springs[point_masses[i].index_spring_BENDING[k]].index_a == i) {
+                another_point_index = springs[point_masses[i].index_spring_BENDING[k]].index_b;
+            }
+            else {
+                another_point_index = springs[point_masses[i].index_spring_BENDING[k]].index_a;
+            }
+            dataPos[len * i + 15 + k] = another_point_index;
+        }
+    }
+    
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(dataPos), dataPos, GL_STREAM_DRAW);
+    
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    
+    posAttrib = glGetAttribLocation(program, "position");
+    glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), 0);
+
+    pinAttrib = glGetAttribLocation(program, "pinned");
+    glEnableVertexAttribArray(pinAttrib);
+    glVertexAttribPointer(pinAttrib, 1, GL_INT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
+    
+    lastPosAttrib = glGetAttribLocation(program, "last_position");
+    glEnableVertexAttribArray(lastPosAttrib);
+    glVertexAttribPointer(lastPosAttrib, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(4 * sizeof(GLfloat)));
+    
+    
+    springStructuralAttrib = glGetAttribLocation(program, "spring_structural");
+    glEnableVertexAttribArray(springStructuralAttrib);
+    glVertexAttribPointer(springStructuralAttrib, 4, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(7 * sizeof(GLfloat)));
+    
+    springShearingAttrib = glGetAttribLocation(program, "spring_shearing");
+    glEnableVertexAttribArray(springShearingAttrib);
+    glVertexAttribPointer(springShearingAttrib, 4, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(11 * sizeof(GLfloat)));
+    
+    springBendingAttrib = glGetAttribLocation(program, "spring_bending");
+    glEnableVertexAttribArray(springBendingAttrib);
+    glVertexAttribPointer(springBendingAttrib, 4, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(15 * sizeof(GLfloat)));
+    
+    glGenBuffers(1, &tbo);
+    glBindBuffer(GL_ARRAY_BUFFER, tbo);
+    // glBufferData(GL_ARRAY_BUFFER, 14502 * 2 * 6 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
+    glBufferData(GL_ARRAY_BUFFER, 14502 * 2 * 6 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
+    
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    
+    glGenBuffers(1, &points_buffer);
+    glBindBuffer(GL_TEXTURE_BUFFER, points_buffer);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(points), points, GL_STREAM_READ);
+
+    glGenTextures(1, &points_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_BUFFER, points_texture);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, points_buffer);
+    
+    glGenBuffers(1, &pinned_buffer);
+    glBindBuffer(GL_TEXTURE_BUFFER, pinned_buffer);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(points_pinned), points_pinned, GL_STATIC_READ);
+    
+    glGenTextures(1, &pinned_texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_BUFFER, pinned_texture);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32I, pinned_buffer);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+}
+
+void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
+                     Vector3D gravity, vector<CollisionObject *> *collision_objects, Vector3D wind,
+                     Matrix4f model, Matrix4f viewProjection, bool pause) {
+    double mass = width * height * cp->density / num_width_points / num_height_points;
+    double delta_t = 1.0f / frames_per_sec / simulation_steps;
+    
+    /*
+    for (int i = 0; i < point_masses.size(); i ++) {
+        points_x[i] = dataPos[len * i];
+        points_y[i] = dataPos[len * i + 1];
+        points_z[i] = dataPos[len * i + 2];
+    }
+    glUniform1fv(uniPoints_x, 2500, points_x);
+    glUniform1fv(uniPoints_y, 2500, points_y);
+    glUniform1fv(uniPoints_z, 2500, points_z);
+     */
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, model.data());
     glUniformMatrix4fv(uniViewProjection, 1, GL_FALSE, viewProjection.data());
+    glUniform1i(uniPause, (int)pause);
+    glUniform3f(uniGravity, gravity.x, gravity.y, gravity.z);
+    glUniform1f(uniDeltaT, delta_t);
+    glUniform1f(uniDamping, 1.0 - cp -> damping / 100.0);
+    glUniform1f(uniMass, mass);
+    glUniform1f(uniKs, cp -> ks);
+    glUniform1i(uniPoints, 0);
+    glUniform1i(uniPinned, 1);
     
     glUseProgram(program);
     glBeginTransformFeedback(GL_LINES);
-    glDrawArrays(GL_LINES, 0, 2500);
+    // glDrawArrays(GL_LINES, 0, 2 * 14502);
+    glDrawElements(GL_LINES, 14502 * 2, GL_UNSIGNED_INT, 0);
     glEndTransformFeedback();
     
+    int k = len;
+    printf("!%f %f %f ~ %f %f %f\n", dataPos[k + 0], dataPos[k + 1], dataPos[k + 2], dataPos[k + 4], dataPos[k + 5], dataPos[k + 6]);
+    Vector3D direction = Vector3D(dataPos[1 * len] - dataPos[0], dataPos[1 * len + 1] - dataPos[1], dataPos[1 * len + 2] - dataPos[2]);
+    double length = direction.norm();
+    direction.normalize();
+    Vector3D force = cp -> ks * (length - 0.02) * direction;
+    printf("~ gravity = %f spring = %f %f %f\n", 9.8 * mass, force.x, force.y, force.z);
+    
+    
     glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
+    
+    // 已优化 使用index_feedback获取在feedback中对应的位置
     for (int i = 0; i < point_masses.size(); i ++) {
-        point_masses[i].last_position = point_masses[i].position;
-        point_masses[i].position.x = feedback[i * 4];
-        point_masses[i].position.y = feedback[i * 4 + 1];
-        point_masses[i].position.z = feedback[i * 4 + 2];
-        dataPos[4 * i] = feedback[4 * i];
-        dataPos[4 * i + 1] = feedback[4 * i + 1];
-        dataPos[4 * i + 2] = feedback[4 * i + 2];
+        dataPos[len * i] = feedback[6 * point_masses[i].index_feedback];
+        dataPos[len * i + 1] = feedback[6 * point_masses[i].index_feedback + 1];
+        dataPos[len * i + 2] = feedback[6 * point_masses[i].index_feedback + 2];
+        dataPos[len * i + 4] = feedback[6 * point_masses[i].index_feedback + 3];
+        dataPos[len * i + 5] = feedback[6 * point_masses[i].index_feedback + 4];
+        dataPos[len * i + 6] = feedback[6 * point_masses[i].index_feedback + 5];
+        points[3 * i] = dataPos[len * i];
+        points[3 * i + 1] = dataPos[len * i + 1];
+        points[3 * i + 2] = dataPos[len * i + 2];
     }
-    // printf("%f %f %f \n", dataPos[0], dataPos[1], dataPos[2]);
+    /*
+     // 可优化 加一个map数组
+    for (int i = 0; i < 14502 * 2; i ++) {
+        dataPos[len * indices[i]] = feedback[6 * i];
+        dataPos[len * indices[i] + 1] = feedback[6 * i + 1];
+        dataPos[len * indices[i] + 2] = feedback[6 * i + 2];
+        dataPos[len * indices[i] + 4] = feedback[6 * i + 3];
+        dataPos[len * indices[i] + 5] = feedback[6 * i + 4];
+        dataPos[len * indices[i] + 6] = feedback[6 * i + 5];
+    }
+     */
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataPos), dataPos);
+    
+    glBindBuffer(GL_TEXTURE_BUFFER, points_buffer);
+    glBufferSubData(GL_TEXTURE_BUFFER, 0, sizeof(points), points);
+    glBindTexture(GL_TEXTURE_BUFFER, points_texture);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, points_buffer);
     
     /*
   // TODO (Part 2): Compute total force acting on each point mass.
