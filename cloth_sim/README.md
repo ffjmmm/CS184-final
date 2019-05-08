@@ -1,12 +1,13 @@
-# Assignment 4: Cloth Simulation
-
-[![build status](https://gitlab.com/cs184/clothsim_internal/badges/master/build.svg)](https://gitlab.com/cs184/clothsim_internal/commits/master)
+# Cloth Simulation Using Shader
 
 ## Development
 
-Before doing anything, run:
-
 ```
-git submodule update --init --recursive
+mkdir build
+
+IMPORTANT: mv indices build/indices
+
+cd build
+cmake ..
 ```
 
