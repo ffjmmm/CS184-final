@@ -80,7 +80,7 @@ struct Cloth {
     
     string m_project_root;
     
-    int len = 19;
+    int len = 22;
     int num_points_sphere = 28800;
     GLuint vertexShader_sphere;
     GLuint fragmentShader_sphere;
@@ -121,16 +121,16 @@ struct Cloth {
     GLint springStructuralAttrib;
     GLint springShearingAttrib;
     GLint springBendingAttrib;
-    //    GLint normalAttrib;
+    GLint normalAttrib;
     GLint posAttrib;
     GLint pinAttrib;
     GLint lastPosAttrib;
     GLint posAttrib_sphere;
     GLuint tbo;
     GLfloat points_sphere[28800 * 6];
-    GLfloat dataPos[2500 * 19];
+    GLfloat dataPos[2500 * 22];
     GLfloat feedback[14502 * 6 * 2];
-    // GLfloat feedback_tri[4802 * 6 * 3];
+    GLfloat feedback_tri[4802 * 6 * 3];
     GLuint indices[14502 * 2];
     GLuint indices_tri[4802 * 3];
     Matrix4f model_sphere;
@@ -138,6 +138,7 @@ struct Cloth {
     GLfloat sphere_radius = 0;
     GLint exist_sphere = 0;
     GLfloat friction_sphere;
+    Vector3D point_normal;
 };
 
 #endif /* CLOTH_H */

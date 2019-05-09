@@ -22,6 +22,7 @@ public:
     
     Vector3D get_origin();
     double get_radius();
+    double get_friction();
     
 private:
   Vector3D origin;

@@ -17,9 +17,7 @@ public:
     virtual MatrixXf get_normals() = 0;
     virtual Vector3D get_origin() = 0;
     virtual double get_radius() = 0;
-    double get_friction() {
-        return friction;
-    }
+    virtual double get_friction() = 0;
     
 private:
   double friction;

@@ -35,6 +35,7 @@ struct PointMass {
     vector<int> index_spring_SHEARING;
     vector<int> index_spring_BENDING;
     int index_feedback;
+    int index_feedback_tri;
     
   // mesh reference
   Halfedge *halfedge;

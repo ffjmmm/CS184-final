@@ -21,6 +21,7 @@ public:
     MatrixXf get_normals();
     Vector3D get_origin();
     double get_radius();
+    double get_friction();
 
   Vector3D point;
   Vector3D normal;

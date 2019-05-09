@@ -77,3 +77,7 @@ Vector3D Plane::get_origin() {
 double Plane::get_radius() {
     return 0.0;
 }
+
+double Plane::get_friction() {
+    return friction;
+}

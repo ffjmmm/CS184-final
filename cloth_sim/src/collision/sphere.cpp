@@ -39,3 +39,7 @@ Vector3D Sphere::get_origin() {
 double Sphere::get_radius() {
     return radius;
 }
+
+double Sphere::get_friction() {
+    return friction;
+}

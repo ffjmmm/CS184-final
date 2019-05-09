@@ -120,6 +120,11 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     for (int i = 0; i < 14502 * 2; i ++) {
         scanf("%d", &indices[i]);
     }
+    fclose(stdin);
+    freopen("indices_tri", "r", stdin);
+    for (int i = 0; i < 4802 * 3; i ++) {
+        scanf("%d", &indices_tri[i]);
+    }
     printf("Indices Data Read completely!\n");
     // printf("%d %d %d %d \n", indices[100], indices[101], indices[102], indices[103]);
     
@@ -225,11 +230,31 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
             }
         }
     }
+    for (int i = 0; i < clothMesh -> triangles.size(); i ++) {
+        Triangle *tri = clothMesh -> triangles[i];
+        int num_pm1 = 0, num_pm2 = 0, num_pm3 = 0;
+        for (int k = 0; k < point_masses.size(); k ++) {
+            if (tri -> pm1 -> position == point_masses[k].position) {
+                point_masses[k].index_feedback_tri = 3 * i;
+                num_pm1 = k;
+            }
+            if (tri -> pm2 -> position == point_masses[k].position) {
+                point_masses[k].index_feedback_tri = 3 * i + 1;
+                num_pm2 = k;
+            }
+            if (tri -> pm3 -> position == point_masses[k].position) {
+                point_masses[k].index_feedback_tri = 3 * i + 2;
+                num_pm3 = k;
+            }
+        }
+        // printf("%d %d %d ", num_pm1, num_pm2, num_pm3);
+    }
     
     // 012: position 3: pinned 456: last_position
     // STRUCTURAL No.: 789(10) rest_len = 0.02
     // SHEARING No.:(11)(12)(13)(14) rest_len = 0.028284
     // BENDING No." (15)(16)(17)(18) rest_len = 0.04
+    // Normal: (19)(20)(21)
     
     for (int i = 0; i < point_masses.size(); i ++) {
         points[3 * i] = point_masses[i].position.x;
@@ -243,6 +268,10 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
         dataPos[len * i + 4] = point_masses[i].last_position.x;
         dataPos[len * i + 5] = point_masses[i].last_position.y;
         dataPos[len * i + 6] = point_masses[i].last_position.z;
+        point_normal = point_masses[i].normal();
+        dataPos[len * i + 19] = point_normal.x;
+        dataPos[len * i + 20] = point_normal.y;
+        dataPos[len * i + 21] = point_normal.z;
         for (int k = 0; k < 12; k ++) dataPos[len * i + 7 + k] = -1;
         for (int k = 0; k < point_masses[i].index_spring_STRUCTURAL.size(); k ++) {
             int another_point_index;
@@ -308,10 +337,14 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     glEnableVertexAttribArray(springBendingAttrib);
     glVertexAttribPointer(springBendingAttrib, 4, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(15 * sizeof(GLfloat)));
     
+    normalAttrib = glGetAttribLocation(program, "point_normal");
+    glEnableVertexAttribArray(normalAttrib);
+    glVertexAttribPointer(normalAttrib, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(19 * sizeof(GLfloat)));
+    
     glGenBuffers(1, &tbo);
     glBindBuffer(GL_ARRAY_BUFFER, tbo);
-    // glBufferData(GL_ARRAY_BUFFER, 14502 * 2 * 6 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(feedback), nullptr, GL_STATIC_READ);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(feedback), nullptr, GL_STATIC_READ);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(feedback_tri), nullptr, GL_STATIC_READ);
     
     glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
     
@@ -339,7 +372,8 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_tri), indices_tri, GL_STATIC_DRAW);
     
     for (CollisionObject *co : *objects) {
         MatrixXf position = co -> get_position();
@@ -368,12 +402,12 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     glAttachShader(program_sphere, vertexShader_sphere);
     glAttachShader(program_sphere, fragmentShader_sphere);
     
-    glEnableVertexAttribArray(6);
-    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), 0);
-    glBindAttribLocation(program_sphere, 6, "in_position");
     glEnableVertexAttribArray(7);
-    glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
-    glBindAttribLocation(program_sphere, 7, "in_normal");
+    glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), 0);
+    glBindAttribLocation(program_sphere, 7, "in_position");
+    glEnableVertexAttribArray(8);
+    glVertexAttribPointer(8, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
+    glBindAttribLocation(program_sphere, 8, "in_normal");
     glLinkProgram(program_sphere);
     
     uniViewProjection_sphere = glGetUniformLocation(program_sphere, "u_view_projection");
@@ -396,7 +430,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform1i(uniPause, (int)pause);
     glUniform3f(uniGravity, gravity.x, gravity.y, gravity.z);
     glUniform3f(uniSphere_origin, sphere_origin.x, sphere_origin.y, sphere_origin.z);
-    glUniform1f(uniRadius, sphere_radius * 1.03);
+    glUniform1f(uniRadius, sphere_radius * 1.01);
     glUniform1f(uniDeltaT, delta_t);
     glUniform1f(uniDamping, 1.0 - cp -> damping / 100.0);
     glUniform1f(uniMass, mass);
@@ -406,24 +440,43 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform1i(uniExist_sphere, exist_sphere);
     glUniform1f(uniFriction_sphere, friction_sphere);
     
-    glBeginTransformFeedback(GL_LINES);
-    // glDrawArrays(GL_LINES, 0, 2 * 14502);
-    glDrawElements(GL_LINES, 14502 * 2, GL_UNSIGNED_INT, 0);
+//    glBeginTransformFeedback(GL_LINES);
+//    glDrawElements(GL_LINES, 14502 * 2, GL_UNSIGNED_INT, 0);
+//    glEndTransformFeedback();
+    
+    glBeginTransformFeedback(GL_TRIANGLES);
+    glDrawElements(GL_TRIANGLES, 4802 * 3, GL_UNSIGNED_INT, 0);
     glEndTransformFeedback();
     
-    glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
+//    glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
+    glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback_tri), feedback_tri);
     
     // 已优化 使用index_feedback获取在feedback中对应的位置
+    printf("%f %f %f ~ %f %f %f\n", dataPos[0], dataPos[1], dataPos[2], dataPos[4], dataPos[5], dataPos[6]);
     for (int i = 0; i < point_masses.size(); i ++) {
-        dataPos[len * i] = feedback[6 * point_masses[i].index_feedback];
-        dataPos[len * i + 1] = feedback[6 * point_masses[i].index_feedback + 1];
-        dataPos[len * i + 2] = feedback[6 * point_masses[i].index_feedback + 2];
-        dataPos[len * i + 4] = feedback[6 * point_masses[i].index_feedback + 3];
-        dataPos[len * i + 5] = feedback[6 * point_masses[i].index_feedback + 4];
-        dataPos[len * i + 6] = feedback[6 * point_masses[i].index_feedback + 5];
+//        dataPos[len * i] = feedback[6 * point_masses[i].index_feedback];
+//        dataPos[len * i + 1] = feedback[6 * point_masses[i].index_feedback + 1];
+//        dataPos[len * i + 2] = feedback[6 * point_masses[i].index_feedback + 2];
+//        dataPos[len * i + 4] = feedback[6 * point_masses[i].index_feedback + 3];
+//        dataPos[len * i + 5] = feedback[6 * point_masses[i].index_feedback + 4];
+//        dataPos[len * i + 6] = feedback[6 * point_masses[i].index_feedback + 5];
+        dataPos[len * i] = feedback_tri[6 * point_masses[i].index_feedback_tri];
+        dataPos[len * i + 1] = feedback_tri[6 * point_masses[i].index_feedback_tri + 1];
+        dataPos[len * i + 2] = feedback_tri[6 * point_masses[i].index_feedback_tri + 2];
+        dataPos[len * i + 4] = feedback_tri[6 * point_masses[i].index_feedback_tri + 3];
+        dataPos[len * i + 5] = feedback_tri[6 * point_masses[i].index_feedback_tri + 4];
+        dataPos[len * i + 6] = feedback_tri[6 * point_masses[i].index_feedback_tri + 5];
+        point_masses[i].position = Vector3D(dataPos[len * i], dataPos[len * i + 1], dataPos[len * i + 2]);
         points[3 * i] = dataPos[len * i];
         points[3 * i + 1] = dataPos[len * i + 1];
         points[3 * i + 2] = dataPos[len * i + 2];
+    }
+    
+    for (int i = 0; i < point_masses.size(); i ++) {
+        point_normal = point_masses[i].normal();
+        dataPos[len * i + 19] = point_normal.x;
+        dataPos[len * i + 20] = point_normal.y;
+        dataPos[len * i + 21] = point_normal.z;
     }
     
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataPos), dataPos);

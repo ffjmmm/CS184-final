@@ -21,9 +21,11 @@ layout(location = 2) in vec3 last_position;
 layout(location = 3) in vec4 spring_structural;
 layout(location = 4) in vec4 spring_shearing;
 layout(location = 5) in vec4 spring_bending;
+layout(location = 6) in vec3 point_normal;
 
 out vec3 outPosition;
 out vec3 out_last_position;
+out vec3 out_point_normal;
 
 vec3 spring_force(int k, float relax_length, int type) {
     vec3 force = vec3(0.0, 0.0, 0.0);
@@ -61,12 +63,15 @@ vec3 constrain_changes(int k, float relax_length, vec3 new_position) {
 }
 
 vec3 collide_sphere(vec3 p) {
+    // vec3 p_ = p - vec3(0.000005, 0.0, 0.0);
     vec3 direction = normalize(p - u_sphere_origin);
     float len = distance(p, u_sphere_origin);
     vec3 new_position = p;
     if (len <= u_radius) {
-        vec3 correction = u_sphere_origin + direction * u_radius - last_position;
+        vec3 correction = u_sphere_origin + u_radius * direction - last_position;
         new_position = last_position + (1.0 - u_friction_sphere) * correction;
+        if (isnan(correction.x)) new_position = last_position;
+        // if (isnan(new_position.x)) new_position = u_sphere_origin + u_radius * direction;
     }
     return new_position;
 }
@@ -75,6 +80,7 @@ vec3 collide_sphere(vec3 p) {
 void main()
 {
     out_last_position = position;
+    out_point_normal = point_normal;
     if (u_damping == 0.0 && pause == 0 && u_delta_t == 0.0) {
         outPosition = position;
     }
@@ -86,6 +92,7 @@ void main()
             
             vec3 force = vec3(0.0, 0.0, 0.0);
             force += u_mass * u_gravity;
+            
             force += spring_force(int(spring_structural.x), 0.02, 0);
             force += spring_force(int(spring_structural.y), 0.02, 0);
             force += spring_force(int(spring_structural.z), 0.02, 0);
