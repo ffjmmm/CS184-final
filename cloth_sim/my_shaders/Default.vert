@@ -22,10 +22,12 @@ layout(location = 3) in vec4 spring_structural;
 layout(location = 4) in vec4 spring_shearing;
 layout(location = 5) in vec4 spring_bending;
 layout(location = 6) in vec3 point_normal;
+layout(location = 7) in vec2 uv;
 
 out vec3 outPosition;
 out vec3 out_last_position;
 out vec3 out_point_normal;
+out vec2 out_uv;
 
 vec3 spring_force(int k, float relax_length, int type) {
     vec3 force = vec3(0.0, 0.0, 0.0);
@@ -81,6 +83,7 @@ void main()
 {
     out_last_position = position;
     out_point_normal = point_normal;
+    out_uv = uv;
     if (u_damping == 0.0 && pause == 0 && u_delta_t == 0.0) {
         outPosition = position;
     }

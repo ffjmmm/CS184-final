@@ -158,8 +158,8 @@ ClothSimulator::ClothSimulator(std::string project_root, Screen *screen)
 : m_project_root(project_root) {
   this->screen = screen;
   
-  this->load_shaders();
-  this->load_textures();
+  // this->load_shaders();
+  // this->load_textures();
 
   glEnable(GL_PROGRAM_POINT_SIZE);
   glEnable(GL_DEPTH_TEST);

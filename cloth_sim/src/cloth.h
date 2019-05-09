@@ -80,8 +80,9 @@ struct Cloth {
     
     string m_project_root;
     
-    int len = 22;
+    int len = 24;
     int num_points_sphere = 28800;
+    GLuint my_texture;
     GLuint vertexShader_sphere;
     GLuint fragmentShader_sphere;
     GLuint program_sphere;
@@ -96,6 +97,7 @@ struct Cloth {
     GLint uniFriction_sphere;
     GLint uniSphere_origin;
     GLint uniRadius;
+    GLint uniTexture;
     GLint uniExist_sphere;
     GLint uniPinned;
     GLint uniPoints_x;
@@ -125,10 +127,11 @@ struct Cloth {
     GLint posAttrib;
     GLint pinAttrib;
     GLint lastPosAttrib;
+    GLint uvAttrib;
     GLint posAttrib_sphere;
     GLuint tbo;
     GLfloat points_sphere[28800 * 6];
-    GLfloat dataPos[2500 * 22];
+    GLfloat dataPos[2500 * 24];
     GLfloat feedback[14502 * 6 * 2];
     GLfloat feedback_tri[4802 * 6 * 3];
     GLuint indices[14502 * 2];

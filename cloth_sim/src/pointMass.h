@@ -30,6 +30,7 @@ struct PointMass {
   Vector3D position;
   Vector3D last_position;
   Vector3D forces;
+    Vector3D texture_uv;
     
     vector<int> index_spring_STRUCTURAL;
     vector<int> index_spring_SHEARING;
