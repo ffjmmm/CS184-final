@@ -163,5 +163,14 @@ void SphereMesh::draw_sphere(GLShader &shader, const Vector3D &p, double r) {
   shader.drawArray(GL_TRIANGLES, 0, sphere_num_indices);
 }
 
+    MatrixXf SphereMesh::get_positions() {
+        return positions;
+    }
+    
+    MatrixXf SphereMesh::get_normals() {
+        return normals;
+    }
+    
+    
 } // namespace Misc
 } // namespace CGL

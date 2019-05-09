@@ -61,3 +61,19 @@ void Plane::render(GLShader &shader) {
 
   shader.drawArray(GL_TRIANGLE_STRIP, 0, 4);
 }
+
+MatrixXf Plane::get_position() {
+    return MatrixXf(1, 1);
+}
+
+MatrixXf Plane::get_normals() {
+    return MatrixXf(1, 1);
+}
+
+Vector3D Plane::get_origin() {
+    return Vector3D(0.0, 0.0, 0.0);
+}
+
+double Plane::get_radius() {
+    return 0.0;
+}

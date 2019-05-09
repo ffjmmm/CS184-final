@@ -23,3 +23,19 @@ void Sphere::render(GLShader &shader) {
   // and intersect with the sphere when rendered
   m_sphere_mesh.draw_sphere(shader, origin, radius * 0.92);
 }
+
+MatrixXf Sphere::get_normals() {
+    return m_sphere_mesh.get_normals();
+}
+
+MatrixXf Sphere::get_position() {
+    return m_sphere_mesh.get_positions();
+}
+
+Vector3D Sphere::get_origin() {
+    return origin;
+}
+
+double Sphere::get_radius() {
+    return radius;
+}

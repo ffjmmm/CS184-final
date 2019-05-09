@@ -23,6 +23,9 @@ public:
    * current modelview/projection matrices and color/material settings.
    */
   void draw_sphere(GLShader &shader, const Vector3D &p, double r);
+    
+    MatrixXf get_positions();
+    MatrixXf get_normals();
 private:
   std::vector<unsigned int> Indices;
   std::vector<double> Vertices;

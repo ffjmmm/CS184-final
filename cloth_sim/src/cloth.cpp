@@ -113,7 +113,7 @@ void Cloth::buildGrid() {
     
 }
 
-void Cloth::initTransFormBuffer(string project_root) {
+void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *objects) {
     m_project_root = project_root;
     
     freopen("indices", "r", stdin);
@@ -133,6 +133,9 @@ void Cloth::initTransFormBuffer(string project_root) {
     
     string vert_shader_str = file_to_string(m_project_root + "/my_shaders/Default.vert");
     string frag_shader_str = file_to_string(m_project_root + "/my_shaders/Default.frag");
+    string vert_shader_str_sphere = file_to_string(m_project_root + "/my_shaders/Sphere.vert");
+    string frag_shader_str_sphere = file_to_string(m_project_root + "/my_shaders/Sphere.frag");
+    
     
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     // glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
@@ -159,6 +162,16 @@ void Cloth::initTransFormBuffer(string project_root) {
     glShaderSource(fragmentShader, 1, &frag_shader_const, nullptr);
     glCompileShader(fragmentShader);
     
+    vertexShader_sphere = glCreateShader(GL_VERTEX_SHADER);
+    const char *vert_shader_const_sphere = vert_shader_str_sphere.c_str();
+    glShaderSource(vertexShader_sphere, 1, &vert_shader_const_sphere, nullptr);
+    glCompileShader(vertexShader_sphere);
+    
+    fragmentShader_sphere = glCreateShader(GL_FRAGMENT_SHADER);
+    const char *frag_shader_const_sphere = frag_shader_str_sphere.c_str();
+    glShaderSource(fragmentShader_sphere, 1, &frag_shader_const_sphere, nullptr);
+    glCompileShader(fragmentShader_sphere);
+    
     program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
@@ -174,12 +187,13 @@ void Cloth::initTransFormBuffer(string project_root) {
     uniDeltaT = glGetUniformLocation(program, "u_delta_t");
     uniDamping = glGetUniformLocation(program, "u_damping");
     uniMass = glGetUniformLocation(program, "u_mass");
-    uniPoints_x = glGetUniformLocation(program, "px");
-    uniPoints_y = glGetUniformLocation(program, "py");
-    uniPoints_z = glGetUniformLocation(program, "pz");
     uniKs = glGetUniformLocation(program, "u_ks");
     uniPoints = glGetUniformLocation(program, "u_points");
     uniPinned = glGetUniformLocation(program, "u_pinned");
+    uniSphere_origin = glGetUniformLocation(program, "u_sphere_origin");
+    uniRadius = glGetUniformLocation(program, "u_radius");
+    uniExist_sphere = glGetUniformLocation(program, "u_exist_sphere");
+    uniFriction_sphere = glGetUniformLocation(program, "u_friction_sphere");
     
     for (int i = 0; i < springs.size(); i ++) {
         for (int k = 0; k < point_masses.size(); k ++) {
@@ -211,13 +225,6 @@ void Cloth::initTransFormBuffer(string project_root) {
             }
         }
     }
-    
-    // 每个点最多有12根弹簧与他相连
-    /*
-     for (int i = 0; i < springs.size(); i ++) {
-         printf("~~%u %lf\n", springs[i].spring_type, springs[i].rest_length);
-     }
-    */
     
     // 012: position 3: pinned 456: last_position
     // STRUCTURAL No.: 789(10) rest_len = 0.02
@@ -275,8 +282,6 @@ void Cloth::initTransFormBuffer(string project_root) {
     
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     
     posAttrib = glGetAttribLocation(program, "position");
     glEnableVertexAttribArray(posAttrib);
@@ -306,7 +311,7 @@ void Cloth::initTransFormBuffer(string project_root) {
     glGenBuffers(1, &tbo);
     glBindBuffer(GL_ARRAY_BUFFER, tbo);
     // glBufferData(GL_ARRAY_BUFFER, 14502 * 2 * 6 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
-    glBufferData(GL_ARRAY_BUFFER, 14502 * 2 * 6 * sizeof(GLfloat), nullptr, GL_STATIC_READ);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(feedback), nullptr, GL_STATIC_READ);
     
     glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tbo);
     
@@ -335,6 +340,47 @@ void Cloth::initTransFormBuffer(string project_root) {
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    
+    for (CollisionObject *co : *objects) {
+        MatrixXf position = co -> get_position();
+        MatrixXf normals = co -> get_normals();
+        sphere_origin = co -> get_origin();
+        sphere_radius = co -> get_radius();
+        friction_sphere = co -> get_friction();
+        if (sphere_radius > 0.0) exist_sphere = 1;
+        model_sphere << sphere_radius, 0, 0, sphere_origin.x, 0, sphere_radius, 0, sphere_origin.y, 0, 0, sphere_radius, sphere_origin.z, 0, 0, 0, 1;
+        for (int i = 0; i < num_points_sphere; i ++) {
+            points_sphere[6 * i] = position.col(i)[0];
+            points_sphere[6 * i + 1] = position.col(i)[1];
+            points_sphere[6 * i + 2] = position.col(i)[2];
+            points_sphere[6 * i + 3] = normals.col(i)[0];
+            points_sphere[6 * i + 4] = normals.col(i)[1];
+            points_sphere[6 * i + 5] = normals.col(i)[2];
+        }
+    }
+    
+    glGenBuffers(1, &vbo_sphere);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points_sphere), points_sphere, GL_STATIC_DRAW);
+    
+    
+    program_sphere = glCreateProgram();
+    glAttachShader(program_sphere, vertexShader_sphere);
+    glAttachShader(program_sphere, fragmentShader_sphere);
+    
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), 0);
+    glBindAttribLocation(program_sphere, 6, "in_position");
+    glEnableVertexAttribArray(7);
+    glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
+    glBindAttribLocation(program_sphere, 7, "in_normal");
+    glLinkProgram(program_sphere);
+    
+    uniViewProjection_sphere = glGetUniformLocation(program_sphere, "u_view_projection");
+    uniModel_sphere = glGetUniformLocation(program_sphere, "u_model");
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
 }
 
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
@@ -343,41 +389,27 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     double mass = width * height * cp->density / num_width_points / num_height_points;
     double delta_t = 1.0f / frames_per_sec / simulation_steps;
     
-    /*
-    for (int i = 0; i < point_masses.size(); i ++) {
-        points_x[i] = dataPos[len * i];
-        points_y[i] = dataPos[len * i + 1];
-        points_z[i] = dataPos[len * i + 2];
-    }
-    glUniform1fv(uniPoints_x, 2500, points_x);
-    glUniform1fv(uniPoints_y, 2500, points_y);
-    glUniform1fv(uniPoints_z, 2500, points_z);
-     */
+    glUseProgram(program);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, model.data());
     glUniformMatrix4fv(uniViewProjection, 1, GL_FALSE, viewProjection.data());
     glUniform1i(uniPause, (int)pause);
     glUniform3f(uniGravity, gravity.x, gravity.y, gravity.z);
+    glUniform3f(uniSphere_origin, sphere_origin.x, sphere_origin.y, sphere_origin.z);
+    glUniform1f(uniRadius, sphere_radius * 1.03);
     glUniform1f(uniDeltaT, delta_t);
     glUniform1f(uniDamping, 1.0 - cp -> damping / 100.0);
     glUniform1f(uniMass, mass);
     glUniform1f(uniKs, cp -> ks);
     glUniform1i(uniPoints, 0);
     glUniform1i(uniPinned, 1);
+    glUniform1i(uniExist_sphere, exist_sphere);
+    glUniform1f(uniFriction_sphere, friction_sphere);
     
-    glUseProgram(program);
     glBeginTransformFeedback(GL_LINES);
     // glDrawArrays(GL_LINES, 0, 2 * 14502);
     glDrawElements(GL_LINES, 14502 * 2, GL_UNSIGNED_INT, 0);
     glEndTransformFeedback();
-    
-    int k = len;
-    printf("!%f %f %f ~ %f %f %f\n", dataPos[k + 0], dataPos[k + 1], dataPos[k + 2], dataPos[k + 4], dataPos[k + 5], dataPos[k + 6]);
-    Vector3D direction = Vector3D(dataPos[1 * len] - dataPos[0], dataPos[1 * len + 1] - dataPos[1], dataPos[1 * len + 2] - dataPos[2]);
-    double length = direction.norm();
-    direction.normalize();
-    Vector3D force = cp -> ks * (length - 0.02) * direction;
-    printf("~ gravity = %f spring = %f %f %f\n", 9.8 * mass, force.x, force.y, force.z);
-    
     
     glGetBufferSubData(GL_TRANSFORM_FEEDBACK_BUFFER, 0, sizeof(feedback), feedback);
     
@@ -393,17 +425,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
         points[3 * i + 1] = dataPos[len * i + 1];
         points[3 * i + 2] = dataPos[len * i + 2];
     }
-    /*
-     // 可优化 加一个map数组
-    for (int i = 0; i < 14502 * 2; i ++) {
-        dataPos[len * indices[i]] = feedback[6 * i];
-        dataPos[len * indices[i] + 1] = feedback[6 * i + 1];
-        dataPos[len * indices[i] + 2] = feedback[6 * i + 2];
-        dataPos[len * indices[i] + 4] = feedback[6 * i + 3];
-        dataPos[len * indices[i] + 5] = feedback[6 * i + 4];
-        dataPos[len * indices[i] + 6] = feedback[6 * i + 5];
-    }
-     */
+    
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataPos), dataPos);
     
     glBindBuffer(GL_TEXTURE_BUFFER, points_buffer);
@@ -411,6 +433,13 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glBindTexture(GL_TEXTURE_BUFFER, points_texture);
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, points_buffer);
     
+    if (exist_sphere) {
+        glUseProgram(program_sphere);
+        glUniformMatrix4fv(uniModel_sphere, 1, GL_FALSE, model_sphere.data());
+        glUniformMatrix4fv(uniViewProjection_sphere, 1, GL_FALSE, viewProjection.data());
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere);
+        glDrawArrays(GL_TRIANGLES, 0, num_points_sphere * 3);
+    }
     /*
   // TODO (Part 2): Compute total force acting on each point mass.
     Vector3D external_force = Vector3D(0.0, 0.0, 0.0);

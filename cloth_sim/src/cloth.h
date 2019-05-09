@@ -49,7 +49,7 @@ struct Cloth {
   ~Cloth();
 
   void buildGrid();
-    void initTransFormBuffer(string project_root);
+    void initTransFormBuffer(string project_root, vector<CollisionObject *> *objects);
   void simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                 Vector3D gravity, vector<CollisionObject *> *collision_objects,
                 Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause);
@@ -81,6 +81,10 @@ struct Cloth {
     string m_project_root;
     
     int len = 19;
+    int num_points_sphere = 28800;
+    GLuint vertexShader_sphere;
+    GLuint fragmentShader_sphere;
+    GLuint program_sphere;
     GLuint vertexShader;
     GLuint fragmentShader;
     GLuint program;
@@ -89,6 +93,10 @@ struct Cloth {
     GLint uniPoints;
     GLfloat points[2500 * 3];
     GLint points_pinned[2500];
+    GLint uniFriction_sphere;
+    GLint uniSphere_origin;
+    GLint uniRadius;
+    GLint uniExist_sphere;
     GLint uniPinned;
     GLint uniPoints_x;
     GLint uniPoints_y;
@@ -99,9 +107,12 @@ struct Cloth {
     GLint uniPause;
     GLint uniTime;
     GLint uniModel;
+    GLint uniModel_sphere;
     GLint uniViewProjection;
+    GLint uniViewProjection_sphere;
     GLuint vao;
     GLuint vbo;
+    GLuint vbo_sphere;
     GLuint ebo;
     GLuint points_buffer;
     GLuint pinned_buffer;
@@ -110,15 +121,23 @@ struct Cloth {
     GLint springStructuralAttrib;
     GLint springShearingAttrib;
     GLint springBendingAttrib;
+    //    GLint normalAttrib;
     GLint posAttrib;
     GLint pinAttrib;
     GLint lastPosAttrib;
+    GLint posAttrib_sphere;
     GLuint tbo;
+    GLfloat points_sphere[28800 * 6];
     GLfloat dataPos[2500 * 19];
     GLfloat feedback[14502 * 6 * 2];
+    // GLfloat feedback_tri[4802 * 6 * 3];
     GLuint indices[14502 * 2];
-//    GLfloat dataPos[14502 * 2 * 7];
-//    GLfloat feedback[14502 * 2 * 6];
+    GLuint indices_tri[4802 * 3];
+    Matrix4f model_sphere;
+    Vector3D sphere_origin;
+    GLfloat sphere_radius = 0;
+    GLint exist_sphere = 0;
+    GLfloat friction_sphere;
 };
 
 #endif /* CLOTH_H */

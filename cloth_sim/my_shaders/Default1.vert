@@ -9,18 +9,17 @@ uniform float u_damping;
 uniform float u_mass;
 uniform samplerBuffer u_points;
 uniform samplerBuffer u_pinned;
+uniform float px[2500];
+uniform float py[2500];
+uniform float pz[2500];
 uniform float u_ks;
-uniform vec3 u_sphere_origin;
-uniform float u_radius;
-uniform int u_exist_sphere;
-uniform float u_friction_sphere;
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in int pinned;
-layout(location = 2) in vec3 last_position;
-layout(location = 3) in vec4 spring_structural;
-layout(location = 4) in vec4 spring_shearing;
-layout(location = 5) in vec4 spring_bending;
+in vec3 position;
+in int pinned;
+in vec3 last_position;
+in vec4 spring_structural;
+in vec4 spring_shearing;
+in vec4 spring_bending;
 
 out vec3 outPosition;
 out vec3 out_last_position;
@@ -60,17 +59,6 @@ vec3 constrain_changes(int k, float relax_length, vec3 new_position) {
     return position_change;
 }
 
-vec3 collide_sphere(vec3 p) {
-    vec3 direction = normalize(p - u_sphere_origin);
-    float len = distance(p, u_sphere_origin);
-    vec3 new_position = p;
-    if (len <= u_radius) {
-        vec3 correction = u_sphere_origin + direction * u_radius - last_position;
-        new_position = last_position + (1.0 - u_friction_sphere) * correction;
-    }
-    return new_position;
-}
-
 
 void main()
 {
@@ -102,11 +90,6 @@ void main()
             vec3 a = force / u_mass;
             // outPosition = position - 0.01 * texelFetch(u_points, 1).rgb;
             outPosition = position + u_damping * (position - last_position) + u_delta_t * u_delta_t * a;
-            
-            if (u_exist_sphere == 1) {
-                outPosition = collide_sphere(outPosition);
-            }
-            
             outPosition += constrain_changes(int(spring_structural.x), 0.02, outPosition);
             outPosition += constrain_changes(int(spring_structural.y), 0.02, outPosition);
             outPosition += constrain_changes(int(spring_structural.z), 0.02, outPosition);

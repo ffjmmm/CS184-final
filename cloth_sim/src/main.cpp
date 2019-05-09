@@ -504,7 +504,7 @@ int main(int argc, char **argv) {
   // Initialize the Cloth object
   cloth.buildGrid();
   cloth.buildClothMesh();
-  cloth.initTransFormBuffer(project_root);
+  cloth.initTransFormBuffer(project_root, &objects);
 
   // Initialize the ClothSimulator object
   app = new ClothSimulator(project_root, screen);

@@ -17,6 +17,10 @@ public:
 
   void render(GLShader &shader);
   void collide(PointMass &pm);
+    MatrixXf get_position();
+    MatrixXf get_normals();
+    Vector3D get_origin();
+    double get_radius();
 
   Vector3D point;
   Vector3D normal;
