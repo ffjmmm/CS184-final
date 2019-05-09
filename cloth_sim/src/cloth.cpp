@@ -202,6 +202,7 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     uniExist_sphere = glGetUniformLocation(program, "u_exist_sphere");
     uniFriction_sphere = glGetUniformLocation(program, "u_friction_sphere");
     uniTexture = glGetUniformLocation(program, "u_texture");
+    uniWind = glGetUniformLocation(program, "u_wind");
     
     for (int i = 0; i < springs.size(); i ++) {
         for (int k = 0; k < point_masses.size(); k ++) {
@@ -443,10 +444,13 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
 
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                      Vector3D gravity, vector<CollisionObject *> *collision_objects, Vector3D wind,
-                     Matrix4f model, Matrix4f viewProjection, bool pause) {
+                     Matrix4f model, Matrix4f viewProjection, bool pause, int time) {
     double mass = width * height * cp->density / num_width_points / num_height_points;
     double delta_t = 1.0f / frames_per_sec / simulation_steps;
-//    sphere_origin += Vector3D(0.0, 0.001, 0.0);
+
+    //    sphere_origin += Vector3D(0.0, 0.001, 0.0);
+    
+    wind_accleration.z += (sin(2 * PI * time / 50.0) > 0) ? 1.0 : -1.0;
     
     glUseProgram(program);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -454,6 +458,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniformMatrix4fv(uniViewProjection, 1, GL_FALSE, viewProjection.data());
     glUniform1i(uniPause, (int)pause);
     glUniform3f(uniGravity, gravity.x, gravity.y, gravity.z);
+    glUniform3f(uniWind, wind_accleration.x, wind_accleration.y, wind_accleration.z);
     glUniform3f(uniSphere_origin, sphere_origin.x, sphere_origin.y, sphere_origin.z);
     glUniform1f(uniRadius, sphere_radius * 1.01);
     glUniform1f(uniDeltaT, delta_t);
@@ -492,18 +497,18 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
         dataPos[len * i + 4] = feedback_tri[6 * point_masses[i].index_feedback_tri + 3];
         dataPos[len * i + 5] = feedback_tri[6 * point_masses[i].index_feedback_tri + 4];
         dataPos[len * i + 6] = feedback_tri[6 * point_masses[i].index_feedback_tri + 5];
-//        point_masses[i].position = Vector3D(dataPos[len * i], dataPos[len * i + 1], dataPos[len * i + 2]);
+        point_masses[i].position = Vector3D(dataPos[len * i], dataPos[len * i + 1], dataPos[len * i + 2]);
         points[3 * i] = dataPos[len * i];
         points[3 * i + 1] = dataPos[len * i + 1];
         points[3 * i + 2] = dataPos[len * i + 2];
     }
     
-//    for (int i = 0; i < point_masses.size(); i ++) {
-//        point_normal = point_masses[i].normal();
-//        dataPos[len * i + 19] = point_normal.x;
-//        dataPos[len * i + 20] = point_normal.y;
-//        dataPos[len * i + 21] = point_normal.z;
-//    }
+    for (int i = 0; i < point_masses.size(); i ++) {
+        point_normal = point_masses[i].normal();
+        dataPos[len * i + 19] = point_normal.x;
+        dataPos[len * i + 20] = point_normal.y;
+        dataPos[len * i + 21] = point_normal.z;
+    }
     
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataPos), dataPos);
     

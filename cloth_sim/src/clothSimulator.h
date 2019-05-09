@@ -23,7 +23,7 @@ public:
   void loadClothParameters(ClothParameters *cp);
   void loadCollisionObjects(vector<CollisionObject *> *objects);
   virtual bool isAlive();
-  virtual void drawContents();
+  virtual void drawContents(int time);
 
   // Screen events
 
@@ -56,7 +56,7 @@ private:
   // Default simulation values
 
   int frames_per_sec = 90;
-  int simulation_steps = 30;
+  int simulation_steps = 10;
 
   CGL::Vector3D gravity = CGL::Vector3D(0, -9.8, 0);
     CGL::Vector3D wind = CGL::Vector3D(0, 0, 0);

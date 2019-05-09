@@ -14,6 +14,7 @@ uniform vec3 u_sphere_origin;
 uniform float u_radius;
 uniform int u_exist_sphere;
 uniform float u_friction_sphere;
+uniform vec3 u_wind;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in int pinned;
@@ -95,6 +96,10 @@ void main()
             
             vec3 force = vec3(0.0, 0.0, 0.0);
             force += u_mass * u_gravity;
+            if (length(u_wind) > 0.0) {
+                vec3 wind_direction = normalize(u_wind);
+                force += u_mass * dot(point_normal, wind_direction) * u_wind;
+            }
             
             force += spring_force(int(spring_structural.x), 0.02, 0);
             force += spring_force(int(spring_structural.y), 0.02, 0);

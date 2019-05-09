@@ -596,6 +596,7 @@ int main(int argc, char **argv) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_READ);
     */
+    int time = 0;
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         
@@ -628,7 +629,7 @@ int main(int argc, char **argv) {
         printf("\n");
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
     */
-        app->drawContents();
+        app->drawContents(time ++);
 
     // Draw nanogui
 //        screen->drawContents();

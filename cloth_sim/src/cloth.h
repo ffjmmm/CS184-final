@@ -52,7 +52,7 @@ struct Cloth {
     void initTransFormBuffer(string project_root, vector<CollisionObject *> *objects);
   void simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                 Vector3D gravity, vector<CollisionObject *> *collision_objects,
-                Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause);
+                Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause, int time);
 
   void reset();
     void buildClothMesh();
@@ -97,6 +97,7 @@ struct Cloth {
     GLint uniFriction_sphere;
     GLint uniSphere_origin;
     GLint uniRadius;
+    GLint uniWind;
     GLint uniTexture;
     GLint uniExist_sphere;
     GLint uniPinned;
@@ -142,6 +143,7 @@ struct Cloth {
     GLint exist_sphere = 0;
     GLfloat friction_sphere;
     Vector3D point_normal;
+    Vector3D wind_accleration = Vector3D(0.0, 0.0, 5.0);
 };
 
 #endif /* CLOTH_H */

@@ -238,7 +238,7 @@ void ClothSimulator::init() {
 
 bool ClothSimulator::isAlive() { return is_alive; }
 
-void ClothSimulator::drawContents() {
+void ClothSimulator::drawContents(int time) {
   glEnable(GL_DEPTH_TEST);
   // if (!is_paused) {
       
@@ -267,7 +267,7 @@ void ClothSimulator::drawContents() {
  //   shader.setUniform("u_model", model);
  //   shader.setUniform("u_view_projection", viewProjection);
     
-    cloth -> simulate(frames_per_sec, simulation_steps, cp, gravity, collision_objects, wind, model, viewProjection, is_paused);
+    cloth -> simulate(frames_per_sec, simulation_steps, cp, gravity, collision_objects, wind, model, viewProjection, is_paused, time);
   /*
   switch (active_shader.type_hint) {
       case WIREFRAME: {
@@ -594,7 +594,7 @@ bool ClothSimulator::keyCallbackEvent(int key, int scancode, int action,
     case 'N':
       if (is_paused) {
         is_paused = false;
-        drawContents();
+        drawContents(0);
         is_paused = true;
       }
       break;
