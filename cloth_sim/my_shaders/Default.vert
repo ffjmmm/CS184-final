@@ -15,6 +15,7 @@ uniform float u_radius;
 uniform int u_exist_sphere;
 uniform float u_friction_sphere;
 uniform vec3 u_wind;
+uniform float u_thickness;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in int pinned;
@@ -46,11 +47,11 @@ vec3 spring_force(int k, float relax_length, int type) {
 }
 
 vec3 constrain_changes(int k, float relax_length, vec3 new_position) {
-    vec3 p = texelFetch(u_points, k).rgb;
     vec3 position_change = vec3(0, 0, 0);
     if (k == -1) {
         return position_change;
     }
+    vec3 p = texelFetch(u_points, k).rgb;
     float length = distance(p, new_position);
     if (length > relax_length * 1.1) {
         vec3 direction = normalize(p - new_position);
@@ -79,9 +80,15 @@ vec3 collide_sphere(vec3 p) {
     return new_position;
 }
 
+vec3 collide_self(vec3 self_position) {
+    for (int i = 0; i < 2500; i ++) {
+        vec3 p = texelFetch(u_points, i).rgb;
+        
+    }
+    return self_position;
+}
 
-void main()
-{
+void main() {
     out_last_position = position;
     out_point_normal = point_normal;
     out_uv = uv;
@@ -122,6 +129,8 @@ void main()
                 outPosition = collide_sphere(outPosition);
             }
             
+            outPosition = collide_self(outPosition);
+            
             outPosition += constrain_changes(int(spring_structural.x), 0.02, outPosition);
             outPosition += constrain_changes(int(spring_structural.y), 0.02, outPosition);
             outPosition += constrain_changes(int(spring_structural.z), 0.02, outPosition);
@@ -141,4 +150,3 @@ void main()
     }
     gl_Position = u_view_projection * vec4(outPosition, 1.0);
 }
-

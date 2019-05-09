@@ -98,6 +98,7 @@ struct Cloth {
     GLint uniSphere_origin;
     GLint uniRadius;
     GLint uniWind;
+    GLint uniThickness;
     GLint uniTexture;
     GLint uniExist_sphere;
     GLint uniPinned;
@@ -143,7 +144,7 @@ struct Cloth {
     GLint exist_sphere = 0;
     GLfloat friction_sphere;
     Vector3D point_normal;
-    Vector3D wind_accleration = Vector3D(0.0, 0.0, 5.0);
+    Vector3D wind_accleration = Vector3D(0.0, 0.0, -5.0);
 };
 
 #endif /* CLOTH_H */

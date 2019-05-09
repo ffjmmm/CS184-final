@@ -5,7 +5,8 @@
 ```
 mkdir build
 
-IMPORTANT: mv indices build/indices
+mv indices build/indices
+mv indices_tri build/indices_tri
 
 cd build
 cmake ..

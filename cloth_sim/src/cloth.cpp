@@ -203,6 +203,7 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     uniFriction_sphere = glGetUniformLocation(program, "u_friction_sphere");
     uniTexture = glGetUniformLocation(program, "u_texture");
     uniWind = glGetUniformLocation(program, "u_wind");
+    uniThickness = glGetUniformLocation(program, "u_thickness");
     
     for (int i = 0; i < springs.size(); i ++) {
         for (int k = 0; k < point_masses.size(); k ++) {
@@ -450,7 +451,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 
     //    sphere_origin += Vector3D(0.0, 0.001, 0.0);
     
-    wind_accleration.z += (sin(2 * PI * time / 50.0) > 0) ? 1.0 : -1.0;
+    wind_accleration.z += (sin(2 * PI * time / 50.0) > 0) ? -1.0 : 1.0;
     
     glUseProgram(program);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -470,6 +471,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform1i(uniTexture, 2);
     glUniform1i(uniExist_sphere, exist_sphere);
     glUniform1f(uniFriction_sphere, friction_sphere);
+    glUniform1f(uniThickness, thickness);
     
 //    glBeginTransformFeedback(GL_LINES);
 //    glDrawElements(GL_LINES, 14502 * 2, GL_UNSIGNED_INT, 0);
