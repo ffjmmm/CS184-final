@@ -22,6 +22,7 @@ public:
     virtual Vector3D get_point() = 0;
     virtual Vector3D get_normal() = 0;
     virtual bool get_controllable() = 0;
+    virtual bool get_useTexture() = 0;
     
 private:
   double friction;

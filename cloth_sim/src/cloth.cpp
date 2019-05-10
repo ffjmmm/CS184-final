@@ -512,7 +512,8 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     uniPoint_plane_correction = glGetUniformLocation(program_correction, "u_point_plane");
     uniNormal_plane_correction = glGetUniformLocation(program_correction, "u_normal_plane");
     uniThickness_correction = glGetUniformLocation(program_correction, "u_thickness");
-
+    uniUseTexture_correction = glGetUniformLocation(program_correction, "u_use_texture");
+    
     for (CollisionObject *co : *objects) {
         //type: 1.Sphere 2.Plane
         int type = co -> get_type();
@@ -621,12 +622,13 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     double delta_t = 1.0f / frames_per_sec / simulation_steps;
     
     if (wind_flag) {
-        wind_accleration.z += sin(2 * PI * time / 50.0) > 0 ? 0.1 : -0.1;
+        wind_accleration.z += sin(2 * PI * time / 10.0) > 0 ?  2.0 : -2.0;
     }
     
-    if (exist_sphere) {
+    if (exist_sphere && !pause) {
         if (sphere_controllable) sphere_origin += object_move * 0.001;
-        else sphere_origin.z += sin(2 * PI * time / 800.0) > 0 ? 0.003 : -0.003;
+        else sphere_origin.z += sin(2 * PI * sphere_time / 800.0) > 0 ? 0.003 : -0.003;
+        sphere_time ++;
     }
     
     glUseProgram(program);
@@ -639,7 +641,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform3f(uniSphere_origin, sphere_origin.x, sphere_origin.y, sphere_origin.z);
     glUniform3f(uniPoint_plane, point_plane.x, point_plane.y, point_plane.z);
     glUniform3f(uniNormal_plane, normal_plane.x, normal_plane.y, normal_plane.z);
-    glUniform1f(uniRadius, sphere_radius * 1.01);
+    glUniform1f(uniRadius, sphere_radius * 1.03);
     glUniform1f(uniDeltaT, delta_t);
     glUniform1f(uniDamping, 1.0 - cp -> damping / 100.0);
     glUniform1f(uniMass, mass);
@@ -714,7 +716,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform3f(uniSphere_origin_correction, sphere_origin.x, sphere_origin.y, sphere_origin.z);
     glUniform3f(uniPoint_plane_correction, point_plane.x, point_plane.y, point_plane.z);
     glUniform3f(uniNormal_plane_correction, normal_plane.x, normal_plane.y, normal_plane.z);
-    glUniform1f(uniRadius_correction, sphere_radius * 1.01);
+    glUniform1f(uniRadius_correction, sphere_radius * 1.03);
     glUniform1i(uniPoints_correction, 0);
     glUniform1i(uniPinned_correction, 1);
     glUniform1i(uniTexture_correction, 2);
@@ -723,6 +725,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     glUniform1f(uniFriction_sphere_correction, friction_sphere);
     glUniform1f(uniFriction_plane_correction, friction_plane);
     glUniform1f(uniThickness_correction, thickness);
+    glUniform1i(uniUseTexture_correction, (int)use_texture);
     
     glBeginTransformFeedback(GL_TRIANGLES);
     glDrawElements(GL_TRIANGLES, 4802 * 3, GL_UNSIGNED_INT, 0);

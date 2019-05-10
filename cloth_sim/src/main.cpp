@@ -247,7 +247,12 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
       cloth->thickness = thickness;
       cloth->orientation = orientation;
       cloth->pinned = pinned;
-
+        
+        auto it_texture = object.find("texture");
+        if (it_texture != object.end()) {
+            cloth -> use_texture = *it_texture;
+        }
+        
       // Cloth parameters
       bool enable_structural_constraints, enable_shearing_constraints, enable_bending_constraints;
       double damping, density, ks;

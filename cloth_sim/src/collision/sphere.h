@@ -29,7 +29,11 @@ public:
     bool get_controllable() {
         return controllable;
     }
+    bool get_useTexture() {
+        return use_texture;
+    }
     
+    bool use_texture;
     bool controllable;
     
 private:

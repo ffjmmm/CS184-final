@@ -80,6 +80,8 @@ struct Cloth {
     
     string m_project_root;
     
+    bool use_texture;
+    
     int len = 24;
     // int len_selfCollision = 21;
     int num_points_sphere = 28800;
@@ -118,6 +120,7 @@ struct Cloth {
     GLint uniPause;
     GLint uniThickness;
     GLint uniPause_correction;
+    GLint uniUseTexture_correction;
     GLint uniThickness_correction;
     GLint uniFriction_sphere_correction;
     GLint uniFriction_plane_correction;
@@ -178,6 +181,7 @@ struct Cloth {
     Vector3D wind_accleration;
     bool wind_flag = 0;
     bool sphere_controllable;
+    int sphere_time = 0;
 };
 
 #endif /* CLOTH_H */

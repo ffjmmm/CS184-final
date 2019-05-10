@@ -28,6 +28,9 @@ public:
     bool get_controllable() {
         return controllable;
     }
+    bool get_useTexture() {
+        return false;
+    }
     
     bool controllable;
     
