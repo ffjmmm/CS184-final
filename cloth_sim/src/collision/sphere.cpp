@@ -43,3 +43,15 @@ double Sphere::get_radius() {
 double Sphere::get_friction() {
     return friction;
 }
+
+int Sphere::get_type() {
+    return 1;
+}
+
+Vector3D Sphere::get_point() {
+    return Vector3D(0.0, 0.0, 0.0);
+}
+
+Vector3D Sphere::get_normal() {
+    return Vector3D(0.0, 0.0, 0.0);
+}

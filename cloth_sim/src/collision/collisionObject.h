@@ -18,6 +18,9 @@ public:
     virtual Vector3D get_origin() = 0;
     virtual double get_radius() = 0;
     virtual double get_friction() = 0;
+    virtual int get_type() = 0;
+    virtual Vector3D get_point() = 0;
+    virtual Vector3D get_normal() = 0;
     
 private:
   double friction;

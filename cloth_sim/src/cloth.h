@@ -49,7 +49,7 @@ struct Cloth {
   ~Cloth();
 
   void buildGrid();
-    void initTransFormBuffer(string project_root, vector<CollisionObject *> *objects);
+    void initTransFormBuffer(string project_root, vector<CollisionObject *> *objects, Vector3D _wind);
   void simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                 Vector3D gravity, vector<CollisionObject *> *collision_objects,
                 Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause, int time);
@@ -81,11 +81,18 @@ struct Cloth {
     string m_project_root;
     
     int len = 24;
+    // int len_selfCollision = 21;
     int num_points_sphere = 28800;
     GLuint my_texture;
     GLuint vertexShader_sphere;
     GLuint fragmentShader_sphere;
+    GLuint vertexShader_plane;
+    GLuint fragmentShader_plane;
+    GLuint vertexShader_correction;
+    GLuint fragmentShader_correction;
     GLuint program_sphere;
+    GLuint program_plane;
+    GLuint program_correction;
     GLuint vertexShader;
     GLuint fragmentShader;
     GLuint program;
@@ -95,28 +102,46 @@ struct Cloth {
     GLfloat points[2500 * 3];
     GLint points_pinned[2500];
     GLint uniFriction_sphere;
+    GLint uniFriction_plane;
     GLint uniSphere_origin;
     GLint uniRadius;
     GLint uniWind;
-    GLint uniThickness;
     GLint uniTexture;
     GLint uniExist_sphere;
+    GLint uniExist_plane;
+    GLint uniPoint_plane;
+    GLint uniNormal_plane;
     GLint uniPinned;
-    GLint uniPoints_x;
-    GLint uniPoints_y;
-    GLint uniPoints_z;
     GLint uniMass;
     GLint uniDamping;
     GLint uniDeltaT;
     GLint uniPause;
-    GLint uniTime;
+    GLint uniThickness;
+    GLint uniPause_correction;
+    GLint uniThickness_correction;
+    GLint uniFriction_sphere_correction;
+    GLint uniFriction_plane_correction;
+    GLint uniSphere_origin_correction;
+    GLint uniRadius_correction;
+    GLint uniTexture_correction;
+    GLint uniExist_sphere_correction;
+    GLint uniExist_plane_correction;
+    GLint uniPoint_plane_correction;
+    GLint uniNormal_plane_correction;
+    GLint uniPinned_correction;
+    GLint uniPoints_correction;
     GLint uniModel;
     GLint uniModel_sphere;
     GLint uniViewProjection;
+    GLint uniViewProjection_correction;
     GLint uniViewProjection_sphere;
+    GLint uniViewProjection_plane;
+    GLint uniFlag;
     GLuint vao;
     GLuint vbo;
+    GLuint vbo_correction;
     GLuint vbo_sphere;
+    GLuint vbo_plane;
     GLuint ebo;
     GLuint points_buffer;
     GLuint pinned_buffer;
@@ -133,18 +158,25 @@ struct Cloth {
     GLint posAttrib_sphere;
     GLuint tbo;
     GLfloat points_sphere[28800 * 6];
+    GLfloat points_plane[24];
     GLfloat dataPos[2500 * 24];
+    // GLfloat dataPos_selfCollision[2500 * 21];
     GLfloat feedback[14502 * 6 * 2];
     GLfloat feedback_tri[4802 * 6 * 3];
     GLuint indices[14502 * 2];
     GLuint indices_tri[4802 * 3];
     Matrix4f model_sphere;
     Vector3D sphere_origin;
+    Vector3D point_plane;
+    Vector3D normal_plane;
     GLfloat sphere_radius = 0;
     GLint exist_sphere = 0;
+    GLint exist_plane = 0;
     GLfloat friction_sphere;
+    GLfloat friction_plane;
     Vector3D point_normal;
-    Vector3D wind_accleration = Vector3D(0.0, 0.0, -5.0);
+    Vector3D wind_accleration;
+    bool wind_flag = 0;
 };
 
 #endif /* CLOTH_H */

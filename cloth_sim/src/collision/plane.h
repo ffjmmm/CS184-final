@@ -22,7 +22,10 @@ public:
     Vector3D get_origin();
     double get_radius();
     double get_friction();
-
+    int get_type();
+    Vector3D get_point();
+    Vector3D get_normal();
+    
   Vector3D point;
   Vector3D normal;
 

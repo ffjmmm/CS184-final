@@ -81,3 +81,15 @@ double Plane::get_radius() {
 double Plane::get_friction() {
     return friction;
 }
+
+int Plane::get_type() {
+    return 2;
+}
+
+Vector3D Plane::get_point() {
+    return point;
+}
+
+Vector3D Plane::get_normal() {
+    return normal;
+}
