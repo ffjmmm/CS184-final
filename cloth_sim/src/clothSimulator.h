@@ -65,6 +65,8 @@ private:
   Cloth *cloth;
   ClothParameters *cp;
   vector<CollisionObject *> *collision_objects;
+    
+    Vector3D object_move;
 
   // OpenGL attributes
 

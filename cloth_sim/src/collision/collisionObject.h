@@ -21,6 +21,7 @@ public:
     virtual int get_type() = 0;
     virtual Vector3D get_point() = 0;
     virtual Vector3D get_normal() = 0;
+    virtual bool get_controllable() = 0;
     
 private:
   double friction;

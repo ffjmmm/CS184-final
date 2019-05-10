@@ -52,7 +52,7 @@ struct Cloth {
     void initTransFormBuffer(string project_root, vector<CollisionObject *> *objects, Vector3D _wind);
   void simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                 Vector3D gravity, vector<CollisionObject *> *collision_objects,
-                Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause, int time);
+                Vector3D wind, Matrix4f model, Matrix4f viewProjection, bool pause, int time, Vector3D object_move);
 
   void reset();
     void buildClothMesh();
@@ -177,6 +177,7 @@ struct Cloth {
     Vector3D point_normal;
     Vector3D wind_accleration;
     bool wind_flag = 0;
+    bool sphere_controllable;
 };
 
 #endif /* CLOTH_H */

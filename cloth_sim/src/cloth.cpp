@@ -420,9 +420,9 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     glEnableVertexAttribArray(normalAttrib);
     glVertexAttribPointer(normalAttrib, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(19 * sizeof(GLfloat)));
     
-    uvAttrib = glGetAttribLocation(program, "uv");
-    glEnableVertexAttribArray(uvAttrib);
-    glVertexAttribPointer(uvAttrib, 2, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(22 * sizeof(GLfloat)));
+//    uvAttrib = glGetAttribLocation(program, "uv");
+//    glEnableVertexAttribArray(uvAttrib);
+//    glVertexAttribPointer(uvAttrib, 2, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(22 * sizeof(GLfloat)));
     
     glGenBuffers(1, &tbo);
     glBindBuffer(GL_ARRAY_BUFFER, tbo);
@@ -481,15 +481,18 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
     
     glTransformFeedbackVaryings(program_correction, 2, feedbackVaryings, GL_INTERLEAVED_ATTRIBS);
     
+    glEnableVertexAttribArray(7);
+    glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), 0);
+    glBindAttribLocation(program_correction, 7, "position");
     glEnableVertexAttribArray(8);
-    glVertexAttribPointer(8, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), 0);
-    glBindAttribLocation(program_correction, 8, "position");
+    glVertexAttribPointer(8, 1, GL_INT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
+    glBindAttribLocation(program_correction, 8, "pinned");
     glEnableVertexAttribArray(9);
-    glVertexAttribPointer(9, 1, GL_INT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(3 * sizeof(GLfloat)));
-    glBindAttribLocation(program_correction, 9, "pinned");
+    glVertexAttribPointer(9, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(4 * sizeof(GLfloat)));
+    glBindAttribLocation(program_correction, 9, "last_position");
     glEnableVertexAttribArray(10);
-    glVertexAttribPointer(10, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(4 * sizeof(GLfloat)));
-    glBindAttribLocation(program_correction, 10, "last_position");
+    glVertexAttribPointer(10, 3, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(19 * sizeof(GLfloat)));
+    glBindAttribLocation(program_correction, 10, "point_normal");
     glEnableVertexAttribArray(11);
     glVertexAttribPointer(11, 2, GL_FLOAT, GL_FALSE, len * sizeof(GL_FLOAT), (void*)(22 * sizeof(GLfloat)));
     glBindAttribLocation(program_correction, 11, "uv");
@@ -519,6 +522,7 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
             sphere_origin = co -> get_origin();
             sphere_radius = co -> get_radius();
             friction_sphere = co -> get_friction();
+            sphere_controllable = co -> get_controllable();
             exist_sphere = 1;
             model_sphere << sphere_radius, 0, 0, sphere_origin.x, 0, sphere_radius, 0, sphere_origin.y, 0, 0, sphere_radius, sphere_origin.z, 0, 0, 0, 1;
             for (int i = 0; i < num_points_sphere; i ++) {
@@ -612,12 +616,17 @@ void Cloth::initTransFormBuffer(string project_root, vector<CollisionObject *> *
 
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                      Vector3D gravity, vector<CollisionObject *> *collision_objects, Vector3D wind,
-                     Matrix4f model, Matrix4f viewProjection, bool pause, int time) {
+                     Matrix4f model, Matrix4f viewProjection, bool pause, int time, Vector3D object_move) {
     double mass = width * height * cp->density / num_width_points / num_height_points;
     double delta_t = 1.0f / frames_per_sec / simulation_steps;
     
     if (wind_flag) {
-        wind_accleration.z += sin(2 * PI * time / 30) > 0 ? 1.0 : -1.0;
+        wind_accleration.z += sin(2 * PI * time / 50.0) > 0 ? 0.1 : -0.1;
+    }
+    
+    if (exist_sphere) {
+        if (sphere_controllable) sphere_origin += object_move * 0.001;
+        else sphere_origin.z += sin(2 * PI * time / 800.0) > 0 ? 0.003 : -0.003;
     }
     
     glUseProgram(program);
@@ -676,18 +685,18 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
             dataPos[len * i + 5] = feedback_tri[6 * point_masses[i].index_feedback_tri + 4];
             dataPos[len * i + 6] = feedback_tri[6 * point_masses[i].index_feedback_tri + 5];
 ////        }
-//        point_masses[i].position = Vector3D(dataPos[len * i], dataPos[len * i + 1], dataPos[len * i + 2]);
+        point_masses[i].position = Vector3D(dataPos[len * i], dataPos[len * i + 1], dataPos[len * i + 2]);
         points[3 * i] = dataPos[len * i];
         points[3 * i + 1] = dataPos[len * i + 1];
         points[3 * i + 2] = dataPos[len * i + 2];
     }
     
-//    for (int i = 0; i < point_masses.size(); i ++) {
-//        point_normal = point_masses[i].normal();
-//        dataPos[len * i + 19] = point_normal.x;
-//        dataPos[len * i + 20] = point_normal.y;
-//        dataPos[len * i + 21] = point_normal.z;
-//    }
+    for (int i = 0; i < point_masses.size(); i ++) {
+        point_normal = point_masses[i].normal();
+        dataPos[len * i + 19] = point_normal.x;
+        dataPos[len * i + 20] = point_normal.y;
+        dataPos[len * i + 21] = point_normal.z;
+    }
 //    printf("1 : %f %f %f ~ %f %f %f\n", dataPos[0], dataPos[1], dataPos[2], dataPos[4], dataPos[5], dataPos[6]);
     
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(dataPos), dataPos);

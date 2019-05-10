@@ -325,8 +325,14 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
       } else {
         incompleteObjectError("sphere", "friction");
       }
-
-      Sphere *s = new Sphere(origin, radius, friction, sphere_num_lat, sphere_num_lon);
+        
+        Sphere *s = new Sphere(origin, radius, friction, sphere_num_lat, sphere_num_lon);
+        
+        auto it_contorl = object.find("control");
+        if (it_contorl != object.end()) {
+            s -> controllable = *it_contorl;
+        }
+        
       objects->push_back(s);
     } else if (key == WIND) {
         auto it_acceleration_x = object.find("x_a");

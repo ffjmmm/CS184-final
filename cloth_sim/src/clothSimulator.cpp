@@ -267,7 +267,8 @@ void ClothSimulator::drawContents(int time) {
  //   shader.setUniform("u_model", model);
  //   shader.setUniform("u_view_projection", viewProjection);
     
-    cloth -> simulate(frames_per_sec, simulation_steps, cp, gravity, collision_objects, wind, model, viewProjection, is_paused, time);
+    cloth -> simulate(frames_per_sec, simulation_steps, cp, gravity, collision_objects, wind, model, viewProjection, is_paused, time, object_move);
+//    object_move = Vector3D(0.0, 0.0, 0.0);
   /*
   switch (active_shader.type_hint) {
       case WIREFRAME: {
@@ -598,6 +599,35 @@ bool ClothSimulator::keyCallbackEvent(int key, int scancode, int action,
         is_paused = true;
       }
       break;
+        case 'w':
+        case 'W':
+            object_move.y = object_move.y == 1.0 ? 1.0 : object_move.y + 1.0;
+            break;
+        case 's':
+        case 'S':
+            object_move.y = object_move.y == -1.0 ? -1.0 : object_move.y + -1.0;
+            break;
+        case 'a':
+        case 'A':
+            object_move += Vector3D(-1.0, 0.0, 0.0);
+            break;
+        case 'd':
+        case 'D':
+            object_move += Vector3D(1.0, 0.0, 0.0);
+            break;
+        case 'q':
+        case 'Q':
+            object_move += Vector3D(0.0, 0.0, -1.0);
+            break;
+        case 'e':
+        case 'E':
+            object_move += Vector3D(0.0, 0.0, 1.0);
+            break;
+        case 'x':
+        case 'X':
+            object_move = Vector3D(0.0, 0.0, 0.0);
+            break;
+            
     }
   }
 

@@ -2,7 +2,8 @@
   "sphere": {
     "origin": [0.5, 0.2, 0.5],
     "radius": 0.2,
-    "friction": 0.3
+    "friction": 0.3,
+    "control": true
   },
   "cloth": {
     "damping": 0.2,

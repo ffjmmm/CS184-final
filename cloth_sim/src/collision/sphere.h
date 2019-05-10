@@ -26,6 +26,11 @@ public:
     int get_type();
     Vector3D get_point();
     Vector3D get_normal();
+    bool get_controllable() {
+        return controllable;
+    }
+    
+    bool controllable;
     
 private:
   Vector3D origin;

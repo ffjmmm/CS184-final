@@ -164,19 +164,19 @@ void main() {
             if (u_exist_plane == 1) {
                 outPosition = collide_plane(outPosition);
             }
-                
-            outPosition += constrain_changes(int(spring_structural.x), 0.02, outPosition);
-            outPosition += constrain_changes(int(spring_structural.y), 0.02, outPosition);
-            outPosition += constrain_changes(int(spring_structural.z), 0.02, outPosition);
-            outPosition += constrain_changes(int(spring_structural.w), 0.02, outPosition);
-            outPosition += constrain_changes(int(spring_shearing.x), 0.028284, outPosition);
-            outPosition += constrain_changes(int(spring_shearing.y), 0.028284, outPosition);
-            outPosition += constrain_changes(int(spring_shearing.z), 0.028284, outPosition);
-            outPosition += constrain_changes(int(spring_shearing.w), 0.028284, outPosition);
+            
             outPosition += constrain_changes(int(spring_bending.x), 0.04, outPosition);
             outPosition += constrain_changes(int(spring_bending.y), 0.04, outPosition);
             outPosition += constrain_changes(int(spring_bending.z), 0.04, outPosition);
             outPosition += constrain_changes(int(spring_bending.w), 0.04, outPosition);
+            outPosition += constrain_changes(int(spring_shearing.x), 0.028284, outPosition);
+            outPosition += constrain_changes(int(spring_shearing.y), 0.028284, outPosition);
+            outPosition += constrain_changes(int(spring_shearing.z), 0.028284, outPosition);
+            outPosition += constrain_changes(int(spring_shearing.w), 0.028284, outPosition);
+            outPosition += constrain_changes(int(spring_structural.x), 0.02, outPosition);
+            outPosition += constrain_changes(int(spring_structural.y), 0.02, outPosition);
+            outPosition += constrain_changes(int(spring_structural.z), 0.02, outPosition);
+            outPosition += constrain_changes(int(spring_structural.w), 0.02, outPosition);
         }
         else {
             outPosition = position;
