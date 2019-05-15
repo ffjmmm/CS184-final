@@ -49,12 +49,124 @@
       <div class="container">
         <div class="row align-items-lg-center">
           <div class="col-lg-6 order-lg-1">
-            <h1 class="heading mb-3" data-aos="fade-up">Final Deliverables <br> Coming Soon</h1>
+            <h1 class="heading mb-3" data-aos="fade-up">Final Deliverables</h1>
           </div>
 
         </div>
       </div>
     </div> <!-- .templateux-cover -->
+
+    <div id="blog" class="templateux-section">
+      <div class="container">
+        <div class="row justify-content-center mb-5">
+
+          <div class="col-md-10">
+            <h2 class="mb-3">Abstract</h2>
+            <p>
+              In this project, we implemented a cloth simulation system on GPU using openGL shader. We aimed to extend
+              the project 4 by producing high quality cloth simulations using OpenGL shaders which take advantage of the
+              parallelization power of GPUs. The starter code is based on project 4, which contains the structure of
+              the cloth and all simulation calculation on CPU. Because the calculation of every simulation step is a
+              heavy job for the CPU, in order to get better performance, we transfer these calculations into Shader.
+              Besides that, we also add more interesting features in simulation: a moving ball interacts with the cloth,
+              wind affect on cloth, collision with a cube.
+            </p>
+
+            <h2 class="mb-3 mt-5">Technical approach</h2>
+            <p>
+              The core part of our project is transferring all the heavy calculation into shader on GPU, therefore, it
+              is very important to use a proper method to transfer the data into shader. By looking through the instruction
+              of openGL, we found that Vertex Buffer Object could be an appropriate bridge between CPU and GPU. For
+              every point mass, we arrange 24 length arrays to store the necessary information: position of the point,
+              whether it is pinned, last position of the point, 12 indices of points on the other side of the springs,
+              normal vector of the point, and the uv value. However, only the VBO is not enough for implementing position
+              updating in Shader since we cannot get the positions of other points by index in Shader. To handle the problem,
+              we use another buffer call Texture Buffer to store all the positions of points, storing the x, y, z value
+              of a point in the form of r, g, b value. Using these two buffers together can easily implement calculation
+              of position updating.
+            </p>
+
+            <div class="col-lg-12 mb-4 mt-2" align="center">
+              <a href="images/structures.jpg" data-fancybox="final">
+                <img src="images/structures.jpg" class="img-fluid">
+              </a>
+              <p class="mt-2 text-center">Two ways to send information to shaders</p>
+            </div>
+
+            <p>
+              After getting all the information in Shader, we rewrite the constrains of springs in Shader syntax, including
+              computing all the external force on each point mass, limiting deform of spring within 110% of rest length,
+              handling collision with objects, and self-collision. However, we find that if we do all the calculation
+              in only one Shader, when handling self-collision, we still use the old position, which might cause bad
+              results. So we separate the calculation into two parts: first, update position by calculating external force,
+              then handle spring constrains and self-collision.
+            </p>
+
+            <div class="col-lg-12 mb-4 mt-2" align="center">
+              <a href="images/simulation_step.jpg" data-fancybox="final">
+                <img src="images/simulation_step.jpg" class="img-fluid">
+              </a>
+              <p class="mt-2 text-center">One simulation step</p>
+            </div>
+
+            <h2 class="mb-3 mt-3">Results</h2>
+
+            <p><a href="gallery.html">To view the result videos in gallery</a></p>
+
+            <h2 class="mb-3 mt-5">References</h2>
+            <li><a href="https://www.khronos.org/opengl/wiki/Shader">Introduce to shader</a></li>
+            <li><a href="https://github.com/JoeyDeVries/LearnOpenGL">OpenGL tutorials</a></li>
+            <li><a href="https://www.khronos.org/opengl/wiki/Transform_Feedback">Introduce to Transform Feedback</a></li>
+            <li><a href="https://open.gl/feedback">Transform Feedback tutorial</a></li>
+            <li><a href="https://www.khronos.org/opengl/wiki/Buffer_Texture">Introduce to Buffer Texture</a></li>
+            <li><a href="https://cs184.eecs.berkeley.edu/sp19/article/34/assignment-4-cloth-simulation">GUI and CPU cloth simulation based on Project 4</a></li>
+
+            <h2 class="mb-3 mt-5">Contributions from each team member</h2>
+            <p><b>Jieming Fan</b></p>
+            <li>Implemented vertex information transform between CPU and shader</li>
+            <li>Wrote shaders to render the cloth</li>
+            <li>Implemented spring constrains in shader</li>
+            <li>Transformed force calculation for each vertex from CPU to shader</li>
+            <li>Transformed Verlet integration from CPU to shader to compute new positions</li>
+            <li>Implemented wind force for simulation system in both CPU and shader</li>
+            <li>Handled collisions with sphere, cube and plane in shader</li>
+            <li>Implemented cloth self-collision in shader</li>
+            <li>Implemented the limit of the length change of springs in each simulation step</li>
+            <li>Designed and wrote this web page</li>
+            <li>Recorded some result videos</li>
+            <p></p>
+            <p><b>Xinhao Song</b></p>
+            <li>Implemented cloth collision with the moving ball</li>
+            <li>Created a cube class drawing with normal shading and implemented object collision with cube</li>
+            <li>Tried to optimize collision detection with predictive contacts</li>
+            <li>Learned how different shader’s buffers work and implemented using VBO and EBO to draw objects</li>
+            <li>Transferred features(cube) into shader using our self-defined vector structure</li>
+            <li>Made milestone and final video, did presentation for poster session</li>
+            <p></p>
+            <p><b>Shenao Zhang</b></p>
+            <li>Wrote a demo that implemented transform feedback</li>
+            <li>Compared performance between CPU version and GPU version</li>
+            <li>Worked on cloth self-collisions</li>
+            <li>Wrote a simple version of simulation system framework</li>
+            <p></p>
+
+            <h2 class="mb-4 mt-5">Final Video</h2>
+            <div class="panel show">
+              <div class="videoWrapper">
+                <iframe src="https://www.youtube.com/embed/VM1vjc7X9XQ" frameborder="0"
+                        allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+      <div class="owl-carousel wide-slider">
+      </div> <!-- .owl-carousel -->
+    </div>
+  </div> <!-- .js-animsition -->
 
     <div class="owl-carousel wide-slider">
     </div> <!-- .owl-carousel -->

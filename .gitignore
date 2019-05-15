@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+videos
 build
 build_Xcode
 *.exe
